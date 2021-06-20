@@ -101,9 +101,10 @@ D3D12_SHADER_BYTECODE CShader::CompileShaderFromFile(WCHAR *pszFileName, LPCSTR
 pszShaderName, LPCSTR pszShaderProfile, ID3DBlob** ppd3dShaderBlob)
 {
 	UINT nCompileFlags = 0;
-	#if defined(_DEBUG)
+#if defined(_DEBUG)
 	nCompileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-	#endif
+
+#endif
 	::D3DCompileFromFile(pszFileName, NULL, NULL, pszShaderName, pszShaderProfile,
 		nCompileFlags, 0, ppd3dShaderBlob, NULL);
 	D3D12_SHADER_BYTECODE d3dShaderByteCode;
@@ -223,57 +224,98 @@ CObjectsShader::~CObjectsShader()
 {
 }
 
-void CObjectsShader::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+void CObjectsShader::InitBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
+	ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext)
 {
-	//가로x세로x높이가 12x12x12인 정육면체 메쉬를 생성한다. 
-	CCubeMeshDiffused *pCubeMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 
-	12.0f, 12.0f, 12.0f);
-	/*x-축, y-축, z-축 양의 방향의 객체 개수이다. 각 값을 1씩 늘리거나 줄이면서 실행할 때 프레임 레이트가 어떻게
-	변하는 가를 살펴보기 바란다.*/
-	int xObjects = 1, yObjects = 1, zObjects = 1, i = 0;
-	//x-축, y-축, z-축으로 21개씩 총 21 x 21 x 21 = 9261개의 정육면체를 생성하고 배치한다. 
-	m_nObjects = (xObjects * 2 + 1) * (yObjects * 2 + 1) * (zObjects * 2 + 1);
-	m_ppObjects = new CGameObject * [m_nObjects];
-	float fxPitch = 12.0f * 2.5f;
-	float fyPitch = 12.0f * 2.5f;
-	float fzPitch = 12.0f * 2.5f;
-	CRotatingObject* pRotatingObject = NULL;
-	for (int x = -xObjects; x <= xObjects; x++)
-	{
-		for (int y = -yObjects; y <= yObjects; y++)
-		{
-			for (int z = -zObjects; z <= zObjects; z++)
-			{
-				pRotatingObject = new CRotatingObject();
-				pRotatingObject->SetMesh(pCubeMesh);
-				//각 정육면체 객체의 위치를 설정한다. 
-				pRotatingObject->SetPosition(fxPitch*x, fyPitch*y, fzPitch*z);
-				pRotatingObject->SetRotationAxis(XMFLOAT3(0.0f, 1.0f, 0.0f));
-				pRotatingObject->SetRotationSpeed(10.0f * (i % 10) + 3.0f);
-				m_ppObjects[i++] = pRotatingObject;
-			}
-		}
-	}
+	SetTerrain((CHeightMapTerrain*)pContext);
+
+	// 아군 지점 20,fheight, 100에 설치
+	CCubeMeshDiffused* pCubeMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 6.0f, 20.0f, 6.0f, RANDOM_RED);
+	XMFLOAT3 xmf3RotateAxis, xmf3SurfaceNormal;
+	CRotatingFlagObject* pFlagObject = NULL;
+	pFlagObject = new CRotatingFlagObject(1);
+	pFlagObject->SetMesh(0, pCubeMesh);
+	XMFLOAT3 pos = { 20, 0, 200 };
+	pFlagObject->SetPosition(pos.x, m_pTerrain->GetHeight(pos.x,pos.z)+10.f, pos.z);
+
+	xmf3SurfaceNormal = m_pTerrain->GetNormal(pos.x, pos.z);
+	xmf3RotateAxis = Vector3::CrossProduct(XMFLOAT3(0.0f, 1.0f, 0.0f),
+		xmf3SurfaceNormal);
+	if (Vector3::IsZero(xmf3RotateAxis)) xmf3RotateAxis = XMFLOAT3(0.0f, 1.0f,
+		0.0f);
+	float fAngle = acos(Vector3::DotProduct(XMFLOAT3(0.0f, 1.0f, 0.0f),
+		xmf3SurfaceNormal));
+	pFlagObject->Rotate(&xmf3RotateAxis, XMConvertToDegrees(fAngle));
+	pFlagObject->SetRotationAxis(XMFLOAT3(0.0f, 1.0f, 0.0f));
+	pFlagObject->SetRotationSpeed(36.0f);
+
+	m_listObjects[OBJ::FLAG].push_back(pFlagObject);
+
+
+	//float fTerrainWidth = pTerrain->GetWidth(), fTerrainLength = pTerrain->GetLength();
+	//float fxPitch = 12.0f * 3.5f;
+	//float fyPitch = 12.0f * 3.5f;
+	//float fzPitch = 12.0f * 3.5f;
+	////직육면체를 지형 표면에 그리고 지형보다 높은 위치에 일정한 간격으로 배치한다. 
+	//int xObjects = int(fTerrainWidth / fxPitch) * 0.1, yObjects = 2, zObjects = int(fTerrainLength / fzPitch) * 0.1;
+	//for (int i = 0, x = 0; x < xObjects; x++)
+	//{
+	//	for (int z = 0; z < zObjects; z++)
+	//	{
+	//		for (int y = 0; y < yObjects; y++)
+	//		{
+	//			pRotatingObject = new CRotatingObject(1);
+	//			pRotatingObject->SetMesh(0, pCubeMesh);
+	//			float xPosition = int(fTerrainWidth / fxPitch);
+	//			float zPosition = int(fTerrainLength / fzPitch);
+	//			float fHeight = pTerrain->GetHeight(xPosition, zPosition);
+	//			pRotatingObject->SetPosition(xPosition, fHeight + (y * 10.0f * fyPitch) +
+	//				6.0f, zPosition);
+	//			if (y == 0)
+	//			{
+	//				/*지형의 표면에 위치하는 직육면체는 지형의 기울기에 따라 방향이 다르게 배치한다. 직육면체가 위치할 지형의 법선
+	//				벡터 방향과 직육면체의 y-축이 일치하도록 한다.*/
+	//				xmf3SurfaceNormal = pTerrain->GetNormal(xPosition, zPosition);
+	//				xmf3RotateAxis = Vector3::CrossProduct(XMFLOAT3(0.0f, 1.0f, 0.0f),
+	//					xmf3SurfaceNormal);
+	//				if (Vector3::IsZero(xmf3RotateAxis)) xmf3RotateAxis = XMFLOAT3(0.0f, 1.0f,
+	//					0.0f);
+	//				float fAngle = acos(Vector3::DotProduct(XMFLOAT3(0.0f, 1.0f, 0.0f),
+	//					xmf3SurfaceNormal));
+	//				pRotatingObject->Rotate(&xmf3RotateAxis, XMConvertToDegrees(fAngle));
+	//			}
+	//			pRotatingObject->SetRotationAxis(XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//			pRotatingObject->SetRotationSpeed(36.0f * (i % 10) + 36.0f);
+	//			m_listObjects.push_back(pRotatingObject);
+	//		}
+	//	}
+	//}
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
 
 void CObjectsShader::AnimateObjects(float fTimeElapsed)
 {
-	for (int j = 0; j < m_nObjects; j++)
+	for (int i = 0; i < OBJ::END_OBJID; ++i)
 	{
-		m_ppObjects[j]->Animate(fTimeElapsed);
+		for (auto& object : m_listObjects[i])
+		{
+			object->Animate(fTimeElapsed);
+		}
 	}
+	Collision_Check();
+
 }
 
 void CObjectsShader::ReleaseObjects()
 {
-	if (m_ppObjects)
+	for (int i = 0; i < OBJ::END_OBJID; ++i)
 	{
-		for (int j = 0; j < m_nObjects; j++)
+		for (auto& object : m_listObjects[i])
 		{
-			if (m_ppObjects[j]) delete m_ppObjects[j];
+			delete object;
 		}
-		delete[] m_ppObjects;
+		m_listObjects[i].clear();
+
 	}
 }
 
@@ -307,24 +349,101 @@ void CObjectsShader::CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature*
 	m_nPipelineStates = 1;
 	m_ppd3dPipelineStates = new ID3D12PipelineState * [m_nPipelineStates];
 	CShader::CreateShader(pd3dDevice, pd3dGraphicsRootSignature);
+
 }
 
 void CObjectsShader::ReleaseUploadBuffers()
 {
-	if (m_ppObjects)
+	for (int i = 0; i < OBJ::END_OBJID; ++i)
 	{
-		for (int j = 0; j < m_nObjects; j++) m_ppObjects[j]->ReleaseUploadBuffers();
+		for (auto& object : m_listObjects[i])
+		{
+			object->ReleaseUploadBuffers();
+		}
 	}
 }
 
 void CObjectsShader::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
 	CShader::Render(pd3dCommandList, pCamera); 
-	for (int j = 0; j < m_nObjects; j++)
+	for (int i = 0; i < OBJ::END_OBJID; ++i)
 	{
-		if (m_ppObjects[j])
+		for (auto& object : m_listObjects[i])
 		{
-			m_ppObjects[j]->Render(pd3dCommandList, pCamera);
+			object->Render(pd3dCommandList, pCamera);
 		}
 	}
+}
+
+void CObjectsShader::BuildMyTeam()
+{
+
+
+	/*CCubeMeshDiffused* pCubeMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 12.0f, 12.0f, 12.0f);
+	XMFLOAT3 xmf3RotateAxis, xmf3SurfaceNormal;
+	CTerrainObject* pTerrainObject = NULL;
+	pTerrainObject = new CTerrainObject(pContext, m_pPlayer, XMFLOAT3(0.f, 0.f, -10.f), 6.f);
+	pTerrainObject->SetMesh(0, pCubeMesh);
+	pTerrainObject->SetPosition(XMFLOAT3(pTerrain->GetWidth() * 0.5f,
+		pTerrain->GetHeight(pTerrain->GetWidth() * 0.5f,
+			pTerrain->GetLength() * 0.5f), pTerrain->GetLength() * 0.5f));
+	m_listObjects.push_back(pTerrainObject);*/
+}
+
+void CObjectsShader::Collision_Check()
+{
+	// 플레이어와 플래그
+	for (auto& flag : m_listObjects[OBJ::FLAG])
+	{
+		if (flag->m_xmOOBB.Intersects(m_pPlayer->m_xmOOBB))
+		{
+			// 아군 플레이어 생성 및 플래그 색상 변경
+			if (!dynamic_cast<CRotatingFlagObject*>(flag)->GetChecked())
+			{
+				dynamic_cast<CRotatingFlagObject*>(flag)->SetChecked(true);
+			}
+			cout << "충돌" << endl;
+			break;
+		}
+	}
+}
+
+CTerrainShader::CTerrainShader()
+{
+}
+
+CTerrainShader::~CTerrainShader()
+{
+}
+
+D3D12_INPUT_LAYOUT_DESC CTerrainShader::CreateInputLayout()
+{
+	UINT nInputElementDescs = 2;
+	D3D12_INPUT_ELEMENT_DESC* pd3dInputElementDescs = new
+		D3D12_INPUT_ELEMENT_DESC[nInputElementDescs]; pd3dInputElementDescs[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
+		D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	pd3dInputElementDescs[1] = { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12,
+	D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	D3D12_INPUT_LAYOUT_DESC d3dInputLayoutDesc;
+	d3dInputLayoutDesc.pInputElementDescs = pd3dInputElementDescs;
+	d3dInputLayoutDesc.NumElements = nInputElementDescs;
+	return(d3dInputLayoutDesc);
+}
+
+D3D12_SHADER_BYTECODE CTerrainShader::CreateVertexShader(ID3DBlob** ppd3dShaderBlob)
+{
+	return(CShader::CompileShaderFromFile(L"Shaders.hlsl", "VSDiffused", "vs_5_1",
+		ppd3dShaderBlob));
+}
+D3D12_SHADER_BYTECODE CTerrainShader::CreatePixelShader(ID3DBlob** ppd3dShaderBlob)
+{
+	return(CShader::CompileShaderFromFile(L"Shaders.hlsl", "PSDiffused", "ps_5_1",
+		ppd3dShaderBlob));
+}
+void CTerrainShader::CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature
+	* pd3dGraphicsRootSignature)
+{
+	m_nPipelineStates = 1;
+	m_ppd3dPipelineStates = new ID3D12PipelineState * [m_nPipelineStates];
+	CShader::CreateShader(pd3dDevice, pd3dGraphicsRootSignature);
 }

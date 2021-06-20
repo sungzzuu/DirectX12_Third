@@ -88,6 +88,7 @@ public:
 
 	void ProcessInput();
 	void AnimateObjects();
+
 	void FrameAdvance();
 	void WaitForGpuComplete();
 	//CPU와 GPU를 동기화하는 함수이다. 

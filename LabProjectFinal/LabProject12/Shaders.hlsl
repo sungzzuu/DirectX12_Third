@@ -33,5 +33,6 @@ VS_OUTPUT VSDiffused(VS_INPUT input)
 //«»ºø ºŒ¿Ã¥ı∏¶ ¡§¿««—¥Ÿ. 
 float4 PSDiffused(VS_OUTPUT input) : SV_TARGET
 {
+	//input.color.x = 1;
 	return(input.color);
 }

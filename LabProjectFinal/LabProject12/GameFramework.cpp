@@ -40,6 +40,7 @@ CGameFramework::~CGameFramework()
 
 bool CGameFramework::OnCreate(HINSTANCE hInstance, HWND hMainWnd)
 {
+	::srand(timeGetTime());
 
 	m_hInstance = hInstance;
 	m_hWnd = hMainWnd;
@@ -316,31 +317,20 @@ void CGameFramework::CreateDepthStencilView()
 void CGameFramework::BuildObjects()
 {
 	m_pd3dCommandList->Reset(m_pd3dCommandAllocator, NULL);
-
-
-
-	//씬 객체를 생성하고 씬에 포함될 게임 객체들을 생성한다.
 	m_pScene = new CScene();
-	if(m_pScene)
-		m_pScene->BuildObjects(m_pd3dDevice, m_pd3dCommandList);
+	if (m_pScene) m_pScene->InitBuildObjects(m_pd3dDevice, m_pd3dCommandList);
+	m_pPlayer = new CTerrainPlayer(m_pd3dDevice, m_pd3dCommandList,
+		m_pScene->GetGraphicsRootSignature(), m_pScene->GetTerrain(), 1);
 
-	CAirplanePlayer* pAirplanePlayer = new CAirplanePlayer(m_pd3dDevice,
-		m_pd3dCommandList, m_pScene->GetGraphicsRootSignature());
-	m_pPlayer = pAirplanePlayer;
-	m_pCamera = m_pPlayer->GetCamera();
-
-	//씬 객체를 생성하기 위하여 필요한 그래픽 명령 리스트들을 명령 큐에 추가한다.
-	m_pd3dCommandList->Close();
+	m_pCamera = m_pPlayer->GetCamera(); m_pd3dCommandList->Close();
 	ID3D12CommandList* ppd3dCommandLists[] = { m_pd3dCommandList };
 	m_pd3dCommandQueue->ExecuteCommandLists(1, ppd3dCommandLists);
-
-	//그래픽 명령 리스트들이 모두 실행될 때까지 기다린다. 
 	WaitForGpuComplete();
-
-	//그래픽 리소스들을 생성하는 과정에 생성된 업로드 버퍼들을 소멸시킨다. 
-	if (m_pScene) 
+	if (m_pScene) {
 		m_pScene->ReleaseUploadBuffers();
-
+		m_pScene->SetPlayer(m_pPlayer);
+		m_pScene->SetShaderPlayer(0);
+	}
 	m_GameTimer.Reset();
 
 }
@@ -409,8 +399,10 @@ void CGameFramework::ProcessInput()
 
 void CGameFramework::AnimateObjects()
 {
-	if (m_pScene) m_pScene->AnimateObjects(m_GameTimer.GetTimeElapsed());
+	if (m_pScene) 
+		m_pScene->AnimateObjects(m_GameTimer.GetTimeElapsed());
 }
+
 
 //#define _WITH_PLAYER_TOP
 void CGameFramework::FrameAdvance()
@@ -463,6 +455,11 @@ void CGameFramework::FrameAdvance()
 	m_pdxgiSwapChain->Present(0, 0);
 	MoveToNextFrame();
 	m_GameTimer.GetFrameRate(m_pszFrameRate + 12, 37);
+
+	size_t nLength = _tcslen(m_pszFrameRate);
+
+	XMFLOAT3 xmf3Position = m_pPlayer->GetPosition();
+	_stprintf_s(m_pszFrameRate + nLength, 70 - nLength, _T("(%4f, %4f, %4f)"), xmf3Position.x, xmf3Position.y, xmf3Position.z);
 	::SetWindowText(m_hWnd, m_pszFrameRate);
 }
 

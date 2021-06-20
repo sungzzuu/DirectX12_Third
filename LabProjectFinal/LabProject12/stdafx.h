@@ -15,10 +15,17 @@
 #include <malloc.h>
 #include <memory.h>
 #include <tchar.h>
-
+#include <vector>
+#include <list>
+#include <map>
+#include <algorithm>
 #include <string>
 #include <wrl.h>
 #include <shellapi.h>
+#include <iostream>
+
+#include "enum.h"
+#include "define.h"
 
 #include <d3d12.h>
 #include <dxgi1_4.h>
@@ -40,17 +47,24 @@
 
 #define FRAME_BUFFER_WIDTH 640
 #define FRAME_BUFFER_HEIGHT 480
+#ifdef UNICODE
+#pragma comment(linker, "/entry:wWinMainCRTStartup /subsystem:console")
+#else
+#pragma comment(linker, "/entry:WinMainCRTStartup /subsystem:console")
+#endif
 
 /*정점의 색상을 무작위로(Random) 설정하기 위해 사용한다. 각 정점의 색상은 난수(Random Number)를 생성하여 지정한다.*/
 #define RANDOM_COLOR XMFLOAT4(rand() / float(RAND_MAX), rand() / float(RAND_MAX), rand() / float(RAND_MAX), rand() / float(RAND_MAX))
-
-
+#define RANDOM_RED XMFLOAT4(1, rand() / float(RAND_MAX),1, 1)
+#define RANDOM_BLUE XMFLOAT4(rand() / float(RAND_MAX), rand() / float(RAND_MAX), 1, 1)
+#define RANDOM_GREEN XMFLOAT4(rand() / float(RAND_MAX), 1, rand() / float(RAND_MAX), 1)
+#define RANDOM_YELLOW XMFLOAT4(1, 1, rand() / float(RAND_MAX), 1)
 
 //#define _WITH_SWAPCHAIN_FULLSCREEN_STATE
 using namespace DirectX;
 using namespace DirectX::PackedVector;
 using Microsoft::WRL::ComPtr;
-
+using namespace std;
 
 
 extern ID3D12Resource* CreateBufferResource(ID3D12Device* pd3dDevice,
@@ -60,9 +74,23 @@ extern ID3D12Resource* CreateBufferResource(ID3D12Device* pd3dDevice,
 	NULL);
 
 
+#define EPSILON 1.0e-10f
+inline bool IsZero(float fValue) { return((fabsf(fValue) < EPSILON)); }
+inline bool IsEqual(float fA, float fB) { return(::IsZero(fA - fB)); }
+inline float InverseSqrt(float fValue) { return 1.0f / sqrtf(fValue); }
+inline void Swap(float* pfS, float* pfT) { float fTemp = *pfS; *pfS = *pfT; *pfT = fTemp; }
+
 //3차원 벡터의 연산 
 namespace Vector3
 {
+	//3-차원 벡터가 영벡터인 가를 반환하는 함수이다. 
+	inline bool IsZero(XMFLOAT3& xmf3Vector)
+	{
+		if (::IsZero(xmf3Vector.x) && ::IsZero(xmf3Vector.y) && ::IsZero(xmf3Vector.z))
+			return(true);
+		return(false);
+	}
+
 	inline XMFLOAT3 XMVectorToFloat3(XMVECTOR& xmvVector)
 	{
 		XMFLOAT3 xmf3Result;
@@ -162,6 +190,14 @@ namespace Vector3
 //4차원 벡터의 연산
 namespace Vector4
 {
+	//4-차원 벡터와 스칼라(실수)의 곱을 반환하는 함수이다.
+	inline XMFLOAT4 Multiply(float fScalar, XMFLOAT4& xmf4Vector)
+	{
+		XMFLOAT4 xmf4Result;
+		XMStoreFloat4(&xmf4Result, fScalar * XMLoadFloat4(&xmf4Vector));
+		return(xmf4Result);
+	}
+
 	inline XMFLOAT4 Add(XMFLOAT4& xmf4Vector1, XMFLOAT4& xmf4Vector2)
 	{
 		XMFLOAT4 xmf4Result;
@@ -176,12 +212,7 @@ namespace Vector4
 			XMLoadFloat4(&xmf4Vector2));
 		return(xmf4Result);
 	}
-	inline XMFLOAT4 Multiply(float fScalar, XMFLOAT4& xmf4Vector)
-	{
-		XMFLOAT4 xmf4Result;
-		XMStoreFloat4(&xmf4Result, fScalar * XMLoadFloat4(&xmf4Vector));
-		return(xmf4Result);
-	}
+
 }
 //행렬의 연산
 namespace Matrix4x4
