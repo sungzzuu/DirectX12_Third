@@ -230,27 +230,37 @@ void CObjectsShader::InitBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 	SetTerrain((CHeightMapTerrain*)pContext);
 
 	/* 아군 생성 지점 만드는 부분 */
-	// 아군 지점 20,fheight, 100에 설치 
-	CCubeMeshDiffused* pCubeMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 6.0f, 20.0f, 6.0f, RANDOM_RED);
-	XMFLOAT3 xmf3RotateAxis, xmf3SurfaceNormal;
-	CRotatingFlagObject* pFlagObject = NULL;
-	pFlagObject = new CRotatingFlagObject(1);
-	pFlagObject->SetMesh(0, pCubeMesh);
-	XMFLOAT3 pos = { 20, 0, 200 };
-	pFlagObject->SetPosition(pos.x, m_pTerrain->GetHeight(pos.x,pos.z)+10.f, pos.z);
-	pFlagObject->SetState(CRotatingFlagObject::NORMAL);
-	xmf3SurfaceNormal = m_pTerrain->GetNormal(pos.x, pos.z);
-	xmf3RotateAxis = Vector3::CrossProduct(XMFLOAT3(0.0f, 1.0f, 0.0f),
-		xmf3SurfaceNormal);
-	if (Vector3::IsZero(xmf3RotateAxis)) xmf3RotateAxis = XMFLOAT3(0.0f, 1.0f,
-		0.0f);
-	float fAngle = acos(Vector3::DotProduct(XMFLOAT3(0.0f, 1.0f, 0.0f),
-		xmf3SurfaceNormal));
-	pFlagObject->Rotate(&xmf3RotateAxis, XMConvertToDegrees(fAngle));
-	pFlagObject->SetRotationAxis(XMFLOAT3(0.0f, 1.0f, 0.0f));
-	pFlagObject->SetRotationSpeed(36.0f);
+	// 아군 지점 20,fheight, 100에 설치
+	XMFLOAT3 pos[5];
+	pos[0] = { 20, 0, 200 };
+	pos[1] = { 500, 0, 100 };
+	pos[2] = { 1000, 0, 500 };
+	pos[3] = { 1500, 0, 600 };
+	pos[4] = { 2000, 0, 200 };
 
-	m_listObjects[OBJ::FLAG].push_back(pFlagObject);
+	for(int i = 0; i < 5; ++i)
+	{
+		CCubeMeshDiffused* pCubeMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 6.0f, 20.0f, 6.0f, RANDOM_RED);
+		XMFLOAT3 xmf3RotateAxis, xmf3SurfaceNormal;
+		CRotatingFlagObject* pFlagObject = NULL;
+		pFlagObject = new CRotatingFlagObject(1);
+		pFlagObject->SetMesh(0, pCubeMesh);
+		pFlagObject->SetPosition(pos[i].x, m_pTerrain->GetHeight(pos[i].x, pos[i].z) + 10.f, pos[i].z);
+		pFlagObject->SetState(CRotatingFlagObject::NORMAL);
+		xmf3SurfaceNormal = m_pTerrain->GetNormal(pos[i].x, pos[i].z);
+		xmf3RotateAxis = Vector3::CrossProduct(XMFLOAT3(0.0f, 1.0f, 0.0f),
+			xmf3SurfaceNormal);
+		if (Vector3::IsZero(xmf3RotateAxis)) xmf3RotateAxis = XMFLOAT3(0.0f, 1.0f,
+			0.0f);
+		float fAngle = acos(Vector3::DotProduct(XMFLOAT3(0.0f, 1.0f, 0.0f),
+			xmf3SurfaceNormal));
+		pFlagObject->Rotate(&xmf3RotateAxis, XMConvertToDegrees(fAngle));
+		pFlagObject->SetRotationAxis(XMFLOAT3(0.0f, 1.0f, 0.0f));
+		pFlagObject->SetRotationSpeed(36.0f);
+
+		m_listObjects[OBJ::FLAG].push_back(pFlagObject);
+	}
+	
 
 
 	/* 사용할 메쉬 미리 만들어 놓는 부분*/
@@ -388,7 +398,7 @@ void CObjectsShader::BuildMyTeam()
 	CTerrainObject* pTerrainObject = NULL;
 	for (int i = 0; i < 5; ++i)
 	{
-		XMFLOAT3 offset = { -20.f + i*10.f,0.f,-10.f };
+		XMFLOAT3 offset = { -20.f + i * 10.f,0.f, -10.f + m_iMyTeamBuildNum*(-10.f) };
 
 		pTerrainObject = new CTerrainObject(m_pTerrain, m_pPlayer, offset, 3.f);
 		pTerrainObject->SetMesh(0, m_pCubeMyTeamMesh);
@@ -401,6 +411,7 @@ void CObjectsShader::BuildMyTeam()
 		pTerrainObject->SetPosition(XMFLOAT3(pos.x, m_pTerrain->GetHeight(pos.x, pos.z) + 3.f, pos.z));
 		m_listObjects[OBJ::MYTEAM].push_back(pTerrainObject);
 	}
+	m_iMyTeamBuildNum++;
 	
 }
 

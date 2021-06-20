@@ -90,7 +90,7 @@ protected:
 	list<CGameObject*>						m_listObjects[OBJ::END_OBJID];
 	CPlayer*								m_pPlayer;
 	CHeightMapTerrain						*m_pTerrain;
-
+	int										m_iMyTeamBuildNum=0;
 
 protected:
 	// 메쉬를 미리 만들어 놓는다.
