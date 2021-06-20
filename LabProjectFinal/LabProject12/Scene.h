@@ -30,8 +30,6 @@ public:
 	CHeightMapTerrain* GetTerrain() { return(m_pTerrain); }
 	void SetPlayer(CPlayer* pPlayer) { m_pPlayer = pPlayer; }
 	void SetShaderPlayer(int index) { m_pShaders[index].SetPlayer(m_pPlayer); }
-
-	// 오브젝트 생성. 일단 아군만
 	
 protected:
 

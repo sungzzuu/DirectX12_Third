@@ -54,47 +54,32 @@ public:
 	void MoveForward(float fDistance = 1.0f);
 	//게임 객체를 회전(x-축, y-축, z-축)한다. 
 	void Rotate(float fPitch = 10.0f, float fYaw = 10.0f, float fRoll = 10.0f);
+
+	void SetLook(XMFLOAT3 vLook);
 };
 
 class CRotatingFlagObject : public CGameObject
 {
 public:
+	enum STATE{NORMAL, DOWN, FINISH, END};
+public:
 	CRotatingFlagObject(int nMeshes = 1);
 	virtual ~CRotatingFlagObject();
 private:
-	XMFLOAT3 m_xmf3RotationAxis;
-	float m_fRotationSpeed;
-	bool		m_bChecked;
-	float m_fOriginY;
+	XMFLOAT3	m_xmf3RotationAxis;
+	float		m_fRotationSpeed;
+	STATE		m_eState;
+	float		m_fOriginY;
 public:
 	void SetRotationSpeed(float fRotationSpeed) { m_fRotationSpeed = fRotationSpeed; }
 	void SetRotationAxis(XMFLOAT3 xmf3RotationAxis) {m_xmf3RotationAxis = xmf3RotationAxis;}
 	virtual void Animate(float fTimeElapsed);
-	bool GetChecked() { return m_bChecked; }
-	void SetChecked(bool bCheck) { m_bChecked = bCheck; m_fOriginY = GetPosition().y; m_fRotationSpeed *= 3.f; }
+	STATE GetState() { return m_eState; }
+	void SetState(STATE _eState);
 };
 
-class CTerrainObject : public CGameObject
-{
-public:
-	CTerrainObject(void* pContext, void* pPlayer, XMFLOAT3 xmf3Offset, float fMeshHeightHalf, int nMeshes=1);
-	virtual ~CTerrainObject();
-
-	//플레이어의 위치가 바뀔 때마다 호출되는 함수와 그 함수에서 사용하는 정보를 설정하는 함수이다.
-	virtual void OnObjectUpdateCallback(float fTimeElapsed);
-	void SetObjectUpdatedContext(LPVOID pContext) { m_pObjectUpdatedContext = pContext; }
-	void SetPlayer(CPlayer* pPlayer) { m_pPlayer = pPlayer; }
-	void SetMeshHeightHalf(float fheight) { m_fMeshHeightHalf = fheight; }
-	virtual void Animate(float fTimeElapsed);
-
-private:
-	LPVOID							m_pObjectUpdatedContext;
-	CPlayer*						m_pPlayer;
-	XMFLOAT3						m_xmf3Offset;
-	float							m_fMeshHeightHalf;
 
 
-};
 class CHeightMapTerrain : public CGameObject
 {
 public:
@@ -129,5 +114,27 @@ public:
 	//지형의 크기(가로/세로)를 반환한다. 높이 맵의 크기에 스케일을 곱한 값이다. 
 	float GetWidth() { return(m_nWidth * m_xmf3Scale.x); }
 	float GetLength() { return(m_nLength * m_xmf3Scale.z); }
+
+};
+
+
+class CTerrainObject : public CGameObject
+{
+public:
+	CTerrainObject(void* pContext, void* pPlayer, XMFLOAT3 xmf3Offset, float fMeshHeightHalf, int nMeshes = 1);
+	virtual ~CTerrainObject();
+
+	//플레이어의 위치가 바뀔 때마다 호출되는 함수와 그 함수에서 사용하는 정보를 설정하는 함수이다.
+	virtual void OnObjectUpdateCallback(float fTimeElapsed);
+	void SetTerrain(CHeightMapTerrain* pTerrain) { m_pTerrain = pTerrain; }
+	void SetPlayer(CPlayer* pPlayer) { m_pPlayer = pPlayer; }
+	void SetMeshHeightHalf(float fheight) { m_fMeshHeightHalf = fheight; }
+	virtual void Animate(float fTimeElapsed);
+
+private:
+	CHeightMapTerrain*				m_pTerrain;
+	CPlayer*						m_pPlayer;
+	XMFLOAT3						m_xmf3Offset;
+	float							m_fMeshHeightHalf;
 
 };

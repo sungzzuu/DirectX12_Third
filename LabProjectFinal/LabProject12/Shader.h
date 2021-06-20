@@ -91,6 +91,10 @@ protected:
 	CPlayer*								m_pPlayer;
 	CHeightMapTerrain						*m_pTerrain;
 
+
+protected:
+	// 메쉬를 미리 만들어 놓는다.
+	CCubeMeshDiffused*						m_pCubeMyTeamMesh;
 };
 
 class CTerrainShader : public CShader

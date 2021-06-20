@@ -157,6 +157,14 @@ void CGameObject::Rotate(float fPitch, float fYaw, float fRoll)
 	m_xmf4x4World = Matrix4x4::Multiply(mtxRotate, m_xmf4x4World);
 }
 
+void CGameObject::SetLook(XMFLOAT3 vLook)
+{
+	m_xmf4x4World._31 = vLook.x;
+	m_xmf4x4World._32 = vLook.y;
+	m_xmf4x4World._33 = vLook.z;
+
+}
+
 void CGameObject::SetMesh(int nIndex, CMesh* pMesh)
 {
 	if (m_ppMeshes)
@@ -192,19 +200,34 @@ CRotatingFlagObject::~CRotatingFlagObject()
 void CRotatingFlagObject::Animate(float fTimeElapsed)
 {
 	CGameObject::Rotate(&m_xmf3RotationAxis, m_fRotationSpeed * fTimeElapsed);
-	if (m_bChecked)
+	if (m_eState == DOWN)
 	{
 		XMFLOAT3 pos = GetPosition();
 
 		// 크기만큼 내려갔다면
 		if (m_fOriginY - m_xmOOBB.Extents.y * 2.f+1.f > GetPosition().y)
 		{
+			m_eState = FINISH;
 			SetPosition(pos.x, m_fOriginY - m_xmOOBB.Extents.y * 2.f+1.f, pos.z);
 		}
 		else
 			SetPosition(pos.x, pos.y - 15.f * fTimeElapsed, pos.z);
 	}
 	UpdateBoundingBox();
+}
+
+void CRotatingFlagObject::SetState(STATE _eState)
+{
+	m_eState = _eState;
+
+	if (_eState == DOWN)
+	{
+		m_fOriginY = GetPosition().y;
+		m_fRotationSpeed *= 3.f;
+	}
+
+
+	
 }
 
 CHeightMapTerrain::CHeightMapTerrain(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, 
@@ -269,9 +292,12 @@ CTerrainObject::CTerrainObject(void* pContext, void* pPlayer, XMFLOAT3 xmf3Offse
 	XMFLOAT3 pos = { m_pPlayer->GetPosition().x + xmf3Offset.x, 0, m_pPlayer->GetPosition().z + xmf3Offset.z};
 	pos.y = pTerrain->GetHeight(pos.x, pos.z);
 	SetPosition(pos);
-	
+
+	// 오프셋 저장하기
+	m_xmf3Offset = xmf3Offset;
+	m_fMeshHeightHalf = fMeshHeightHalf;
 	// 오브젝트의 위치가 변경될 때 지형의 정보에 따라 오브젝트의 위치를 변경할 수 있도록 설정한다. 
-	SetObjectUpdatedContext(pTerrain);
+	SetTerrain(pTerrain);
 }
 
 CTerrainObject::~CTerrainObject()
@@ -281,13 +307,16 @@ CTerrainObject::~CTerrainObject()
 void CTerrainObject::OnObjectUpdateCallback(float fTimeElapsed)
 {
 	XMFLOAT3 xmf3PlayerPosition = GetPosition();
-	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)m_pObjectUpdatedContext;
-	float fHeight = pTerrain->GetHeight(xmf3PlayerPosition.x, xmf3PlayerPosition.z) + 6.0f;
+	float fHeight = m_pTerrain->GetHeight(xmf3PlayerPosition.x, xmf3PlayerPosition.z) + 6.0f;
 
 }
 
 void CTerrainObject::Animate(float fTimeElapsed)
 {
+	// 플레이어와 오프셋을 유지하며 쫓아가기
+	XMFLOAT3 playerPos = m_pPlayer->GetPosition();
+	XMFLOAT3 newPos = { playerPos.x + m_xmf3Offset.x, playerPos.y, playerPos.z + m_xmf3Offset.z };
+	SetPosition(newPos.x, m_pTerrain->GetHeight(newPos.x, newPos.z) + m_fMeshHeightHalf, newPos.z);
 	OnObjectUpdateCallback(fTimeElapsed);
 	UpdateBoundingBox();
 
