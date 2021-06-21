@@ -321,7 +321,7 @@ void CGameFramework::BuildObjects()
 	if (m_pScene) m_pScene->InitBuildObjects(m_pd3dDevice, m_pd3dCommandList);
 	m_pPlayer = new CTerrainPlayer(m_pd3dDevice, m_pd3dCommandList,
 		m_pScene->GetGraphicsRootSignature(), m_pScene->GetTerrain(), 1);
-
+	m_pPlayer->Rotate(0.f, 180.f, 0.f);
 	m_pCamera = m_pPlayer->GetCamera(); m_pd3dCommandList->Close();
 	ID3D12CommandList* ppd3dCommandLists[] = { m_pd3dCommandList };
 	m_pd3dCommandQueue->ExecuteCommandLists(1, ppd3dCommandLists);
@@ -407,7 +407,7 @@ void CGameFramework::AnimateObjects()
 //#define _WITH_PLAYER_TOP
 void CGameFramework::FrameAdvance()
 {
-	m_GameTimer.Tick(0.0f);
+	m_GameTimer.Tick(60.0f);
 	ProcessInput();
 	AnimateObjects();
 	HRESULT hResult = m_pd3dCommandAllocator->Reset();

@@ -84,6 +84,7 @@ public:
 	// 아군 생성 함수
 	void BuildMyTeam();
 	// 적군 생성 함수
+	void BuildEnemyFlyShip(XMFLOAT3 spotPos);
 	void BuildEnemy(XMFLOAT3 spotPos);
 	// 충돌체크 함수
 	void Collision_Check();
@@ -93,14 +94,17 @@ protected:
 	CPlayer*								m_pPlayer;
 	CHeightMapTerrain						*m_pTerrain;
 	int										m_iMyTeamBuildNum=0;
+	XMFLOAT3								m_xmf3EnemyBasePos;
+	XMFLOAT3								m_xmf3MyBasePos;
 
 protected:
 	// 메쉬를 미리 만들어 놓는다.
-	CCubeMeshDiffused*						m_pCubeMyTeamMesh; // 아군 메쉬
-	CCubeMeshDiffused*						m_pCubeMySpotMesh; // 아군 지점 메쉬
-	CCubeMeshDiffused*						m_pCubeEnemySpotMesh; // 적군 지점 메쉬
-	CModelMeshDiffused*						m_pEnemyFlyerShipMesh; // 적군 비행기 메쉬
-	CModelMeshDiffused*						m_pBaseMesh;
+	CCubeMeshDiffused*						m_pCubeMyTeamMesh;		// 아군 메쉬
+	CCubeMeshDiffused*						m_pCubeMySpotMesh;		// 아군 지점 메쉬
+	CCubeMeshDiffused*						m_pCubeEnemySpotMesh;	// 적군 지점 메쉬
+	CModelMeshDiffused*						m_pEnemyFlyerShipMesh;	// 적군 비행기 메쉬
+	CModelMeshDiffused*						m_pBaseMesh;			// 기지 메쉬
+	CCubeMeshDiffused*						m_pCubeEnemyMesh;		// 적군 메쉬
 };
 
 class CTerrainShader : public CShader

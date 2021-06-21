@@ -133,6 +133,10 @@ XMFLOAT3 CGameObject::GetRight()
 	return(Vector3::Normalize(XMFLOAT3(m_xmf4x4World._11, m_xmf4x4World._12,
 		m_xmf4x4World._13)));
 }
+XMFLOAT3 CGameObject::GetDir()
+{
+	return(Vector3::Normalize(m_xmf3MoveDir));
+}
 //게임 객체를 로컬 x-축 방향으로 이동한다. 
 void CGameObject::MoveStrafe(float fDistance)
 {
@@ -154,6 +158,14 @@ void CGameObject::MoveForward(float fDistance)
 	XMFLOAT3 xmf3Position = GetPosition();
 	XMFLOAT3 xmf3Look = GetLook();
 	xmf3Position = Vector3::Add(xmf3Position, xmf3Look, fDistance);
+	CGameObject::SetPosition(xmf3Position);
+}
+void CGameObject::MoveByDir(float fDistance)
+{
+	XMFLOAT3 xmf3Position = GetPosition();
+	XMFLOAT3 xmf3Dir = GetDir();
+
+	xmf3Position = Vector3::Add(xmf3Position, xmf3Dir, fDistance);
 	CGameObject::SetPosition(xmf3Position);
 }
 //게임 객체를 주어진 각도로 회전한다. 
@@ -290,21 +302,116 @@ CHeightMapTerrain::~CHeightMapTerrain()
 	if (m_pHeightMapImage) delete m_pHeightMapImage;
 }
 
-CTerrainObject::CTerrainObject(void* pContext, void* pPlayer, XMFLOAT3 xmf3Offset, float fMeshHeightHalf, int nMeshes)
+CMyTeamObject::CMyTeamObject(void* pContext, void* pPlayer, XMFLOAT3 xmf3Offset, float fMeshHeightHalf, int nMeshes)
+	:CTerrainObject(pContext,fMeshHeightHalf,nMeshes)
 {
-	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)pContext;
 	
 	// 플레이어 위치에서 offset만큼 떨어진 위치에 추가. 지형의 y값 받아오기
 	m_pPlayer = (CPlayer*)pPlayer;
 	XMFLOAT3 pos = { m_pPlayer->GetPosition().x + xmf3Offset.x, 0, m_pPlayer->GetPosition().z + xmf3Offset.z};
-	pos.y = pTerrain->GetHeight(pos.x, pos.z);
+	pos.y = m_pTerrain->GetHeight(pos.x, pos.z);
 	SetPosition(pos);
 
 	// 오프셋 저장하기
 	m_xmf3Offset = xmf3Offset;
-	m_fMeshHeightHalf = fMeshHeightHalf;
+	
+
+}
+
+CMyTeamObject::~CMyTeamObject()
+{
+}
+void CMyTeamObject::Animate(float fTimeElapsed)
+{
+	// 플레이어와 오프셋을 유지하며 쫓아가기
+	XMFLOAT3 playerPos = m_pPlayer->GetPosition();
+	XMFLOAT3 newPos = { playerPos.x + m_xmf3Offset.x, playerPos.y, playerPos.z + m_xmf3Offset.z };
+	SetPosition(newPos.x, m_pTerrain->GetHeight(newPos.x, newPos.z) + m_fMeshHeightHalf, newPos.z);
+	OnObjectUpdateCallback(fTimeElapsed);
+	UpdateBoundingBox();
+
+}
+
+CEnemyFlyShip::CEnemyFlyShip(int nMeshes)
+{
+	m_bSpawn = false;
+}
+
+CEnemyFlyShip::~CEnemyFlyShip()
+{
+}
+
+void CEnemyFlyShip::Animate(float fTimeElapsed)
+{
+	switch (m_eState)
+	{
+	case CEnemyFlyShip::BEGIN:
+		MoveByDir(fTimeElapsed * m_fSpeed);
+		if (GetPosition().z < m_pTargetPos.z)
+		{
+			m_eState = CEnemyFlyShip::SPAWN;
+		}
+		break;
+	case CEnemyFlyShip::SPAWN:
+		// 생성
+		m_fSpawnTime += fTimeElapsed;
+		if (m_fSpawnTime > 3.f)
+		{
+			m_fSpawnTime = 0.f;
+			m_fSpeed *= 2.f;
+			m_eState = CEnemyFlyShip::END;
+		}
+		break;
+	case CEnemyFlyShip::END:
+		m_xmf3MoveDir.y = 0.3f;
+		MoveByDir(fTimeElapsed * m_fSpeed);
+		break;
+	default:
+		break;
+	}
+}
+
+bool CEnemyFlyShip::SpawnCheck()
+{
+	if (m_eState == CEnemyFlyShip::SPAWN && !m_bSpawn)
+	{
+		m_bSpawn = true;
+		return true;
+	}
+
+	return false;
+}
+
+CEnemy::CEnemy(void* pContext, float fMeshHeightHalf, int nMeshes)
+	:CTerrainObject(pContext, fMeshHeightHalf, nMeshes)
+{
+	m_eState = CEnemy::BEGIN;
+}
+
+CEnemy::~CEnemy()
+{
+}
+
+void CEnemy::Animate(float fTimeElapsed)
+{
+	if (m_eState == CEnemy::BEGIN)
+	{
+		// 돌면서 크기 커지면서 아래로 내려옴
+		// 터레인의 높이보다 작아지면 터레인 태움 && 상태 NORMAL로 변경
+
+	}
+	else
+	{
+
+	}
+}
+
+CTerrainObject::CTerrainObject(void* pContext, float fMeshHeightHalf, int nMeshes)
+{
 	// 오브젝트의 위치가 변경될 때 지형의 정보에 따라 오브젝트의 위치를 변경할 수 있도록 설정한다. 
+	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)pContext;
 	SetTerrain(pTerrain);
+	m_fMeshHeightHalf = fMeshHeightHalf;
 }
 
 CTerrainObject::~CTerrainObject()
@@ -315,16 +422,4 @@ void CTerrainObject::OnObjectUpdateCallback(float fTimeElapsed)
 {
 	XMFLOAT3 xmf3PlayerPosition = GetPosition();
 	float fHeight = m_pTerrain->GetHeight(xmf3PlayerPosition.x, xmf3PlayerPosition.z) + 6.0f;
-
-}
-
-void CTerrainObject::Animate(float fTimeElapsed)
-{
-	// 플레이어와 오프셋을 유지하며 쫓아가기
-	XMFLOAT3 playerPos = m_pPlayer->GetPosition();
-	XMFLOAT3 newPos = { playerPos.x + m_xmf3Offset.x, playerPos.y, playerPos.z + m_xmf3Offset.z };
-	SetPosition(newPos.x, m_pTerrain->GetHeight(newPos.x, newPos.z) + m_fMeshHeightHalf, newPos.z);
-	OnObjectUpdateCallback(fTimeElapsed);
-	UpdateBoundingBox();
-
 }

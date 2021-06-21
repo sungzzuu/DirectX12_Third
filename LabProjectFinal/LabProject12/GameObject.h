@@ -22,6 +22,7 @@ protected:
 	int m_nMeshes = 0;
 	// 객체 스케일 지정
 	XMFLOAT3					m_f3Scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	XMFLOAT3					m_xmf3MoveDir = XMFLOAT3(0.0f, 0.0f, 1.0f);
 
 public:
 	BoundingOrientedBox			m_xmOOBB;
@@ -50,6 +51,7 @@ public:
 	XMFLOAT3 GetLook();
 	XMFLOAT3 GetUp();
 	XMFLOAT3 GetRight();
+	XMFLOAT3 GetDir();
 	//게임 객체의 위치를 설정한다. 
 	void SetPosition(float x, float y, float z);
 	void SetPosition(XMFLOAT3 xmf3Position);
@@ -57,9 +59,11 @@ public:
 	void MoveStrafe(float fDistance = 1.0f);
 	void MoveUp(float fDistance = 1.0f);
 	void MoveForward(float fDistance = 1.0f);
+	// Dir 방향으로 게임 객체 이동
+	void MoveByDir(float fDistance = 1.0f);
 	//게임 객체를 회전(x-축, y-축, z-축)한다. 
 	void Rotate(float fPitch = 10.0f, float fYaw = 10.0f, float fRoll = 10.0f);
-
+	void SetDir(XMFLOAT3 vDir) { m_xmf3MoveDir = vDir; }
 	void SetLook(XMFLOAT3 vLook);
 };
 
@@ -89,6 +93,35 @@ public:
 // 날아오는 비행기
 // 타겟 정해주기
 // DIR 정해주기
+class CEnemyFlyShip : public CGameObject
+{
+public:
+	enum STATE
+	{
+		BEGIN, SPAWN, END
+	};
+
+public:
+	CEnemyFlyShip(int nMeshes = 1);
+	virtual ~CEnemyFlyShip();
+
+private:
+	STATE			m_eState;
+	XMFLOAT3		m_pTargetPos;
+	float			m_fSpeed;
+	float			m_fSpawnTime = 0.f;
+	bool			m_bSpawn = false;
+
+public:
+	STATE			GetState() { return m_eState; }
+	void			SetState(STATE _eState) { m_eState = _eState; }
+	void			SetTargetPos(XMFLOAT3 pos) { m_pTargetPos = pos; }
+	void			SetSpeed(float fSpeed) { m_fSpeed = fSpeed; }
+	virtual void	Animate(float fTimeElapsed);
+	bool			SpawnCheck();
+
+};
+
 
 
 class CHeightMapTerrain : public CGameObject
@@ -128,24 +161,46 @@ public:
 
 };
 
-
 class CTerrainObject : public CGameObject
 {
 public:
-	CTerrainObject(void* pContext, void* pPlayer, XMFLOAT3 xmf3Offset, float fMeshHeightHalf, int nMeshes = 1);
+	CTerrainObject(void* pContext, float fMeshHeightHalf, int nMeshes = 1);
 	virtual ~CTerrainObject();
 
 	//플레이어의 위치가 바뀔 때마다 호출되는 함수와 그 함수에서 사용하는 정보를 설정하는 함수이다.
 	virtual void OnObjectUpdateCallback(float fTimeElapsed);
 	void SetTerrain(CHeightMapTerrain* pTerrain) { m_pTerrain = pTerrain; }
-	void SetPlayer(CPlayer* pPlayer) { m_pPlayer = pPlayer; }
 	void SetMeshHeightHalf(float fheight) { m_fMeshHeightHalf = fheight; }
+	virtual void Animate(float fTimeElapsed) {};
+
+protected:
+	CHeightMapTerrain*				m_pTerrain;
+	float							m_fMeshHeightHalf;
+
+};
+// 적 오브젝트
+class CEnemy : public CTerrainObject
+{
+public:
+	enum STATE { BEGIN, NORMAL };
+	CEnemy(void* pContext, float fMeshHeightHalf, int nMeshes = 1);
+	virtual ~CEnemy();
+
+public:
+	virtual void	Animate(float fTimeElapsed);
+private:
+	STATE m_eState;
+
+};
+class CMyTeamObject : public CTerrainObject
+{
+public:
+	CMyTeamObject(void* pContext, void* pPlayer, XMFLOAT3 xmf3Offset, float fMeshHeightHalf, int nMeshes = 1);
+	virtual ~CMyTeamObject();
+	void SetPlayer(CPlayer* pPlayer) { m_pPlayer = pPlayer; }
 	virtual void Animate(float fTimeElapsed);
 
 private:
-	CHeightMapTerrain*				m_pTerrain;
 	CPlayer*						m_pPlayer;
 	XMFLOAT3						m_xmf3Offset;
-	float							m_fMeshHeightHalf;
-
 };
