@@ -3,6 +3,7 @@
 class CShader;
 class CCamera;
 class CPlayer;
+class CObjectsShader;
 
 class CGameObject
 {
@@ -10,19 +11,21 @@ public:
 	CGameObject(int nMeshes=1);
 	virtual ~CGameObject();
 private:
-	int m_nReferences = 0;
+	int							m_nReferences = 0;
 public:
-	void AddRef() { m_nReferences++; }
-	void Release() { if (--m_nReferences <= 0) delete this; }
+	void						AddRef() { m_nReferences++; }
+	void						Release() { if (--m_nReferences <= 0) delete this; }
 protected:
-	XMFLOAT4X4		m_xmf4x4World;
-	CShader*		m_pShader = NULL;
+	XMFLOAT4X4					m_xmf4x4World;
+	CShader*					m_pShader = NULL;
 	//게임 객체는 여러 개의 메쉬를 포함하는 경우 게임 객체가 가지는 메쉬들에 대한 포인터와 그 개수이다.
-	CMesh** m_ppMeshes = NULL;
-	int m_nMeshes = 0;
+	CMesh**						m_ppMeshes = NULL;
+	int							m_nMeshes = 0;
 	// 객체 스케일 지정
 	XMFLOAT3					m_f3Scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	XMFLOAT3					m_xmf3MoveDir = XMFLOAT3(0.0f, 0.0f, 1.0f);
+
+	CObjectsShader*				m_pObjectsShader;
 
 public:
 	BoundingOrientedBox			m_xmOOBB;
@@ -32,7 +35,7 @@ public:
 	virtual void SetMesh(int nIndex, CMesh* pMesh);
 	virtual void SetShader(CShader* pShader);
 	virtual void SetScale(XMFLOAT3 xmf3scale);
-
+	virtual XMFLOAT3 GetScale() {return XMFLOAT3(m_xmf4x4World._11, m_xmf4x4World._22, m_xmf4x4World._33);}
 	virtual void Animate(float fTimeElapsed);
 	virtual void OnPrepareRender();
 	void Rotate(XMFLOAT3* pxmf3Axis, float fAngle);
@@ -65,6 +68,9 @@ public:
 	void Rotate(float fPitch = 10.0f, float fYaw = 10.0f, float fRoll = 10.0f);
 	void SetDir(XMFLOAT3 vDir) { m_xmf3MoveDir = vDir; }
 	void SetLook(XMFLOAT3 vLook);
+
+	// 쉐이더 설정
+	void SetObjectsShader(CObjectsShader* pShader) { m_pObjectsShader = pShader; }
 };
 
 class CRotatingFlagObject : public CGameObject
@@ -189,9 +195,14 @@ public:
 public:
 	virtual void	Animate(float fTimeElapsed);
 private:
-	STATE m_eState;
-
+	STATE		m_eState;
+	float		m_fRotationSpeed;
+	float		m_fDownSpeed;
+	float		m_fScale;
+	float		m_fBulletCreateTime;
 };
+
+// 아군 오브젝트
 class CMyTeamObject : public CTerrainObject
 {
 public:
@@ -203,4 +214,18 @@ public:
 private:
 	CPlayer*						m_pPlayer;
 	XMFLOAT3						m_xmf3Offset;
+};
+
+// Dir로 이동하는 총알
+class CBullet : public CGameObject
+{
+public:
+	CBullet(int nMeshes=1);
+	virtual ~CBullet();
+	virtual void Animate(float fTimeElapsed);
+
+private:
+	float			m_fSpeed;
+
+
 };

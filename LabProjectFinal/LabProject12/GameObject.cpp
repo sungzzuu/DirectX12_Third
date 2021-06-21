@@ -245,8 +245,6 @@ void CRotatingFlagObject::SetState(STATE _eState)
 		m_fRotationSpeed *= 3.f;
 	}
 
-
-	
 }
 
 CHeightMapTerrain::CHeightMapTerrain(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, 
@@ -386,6 +384,11 @@ CEnemy::CEnemy(void* pContext, float fMeshHeightHalf, int nMeshes)
 	:CTerrainObject(pContext, fMeshHeightHalf, nMeshes)
 {
 	m_eState = CEnemy::BEGIN;
+	m_fRotationSpeed = 2000.f;
+	m_fDownSpeed = 10.f;
+	m_fScale = 0.1f;
+	m_fBulletCreateTime = 3.f;
+
 }
 
 CEnemy::~CEnemy()
@@ -394,15 +397,43 @@ CEnemy::~CEnemy()
 
 void CEnemy::Animate(float fTimeElapsed)
 {
+	if (m_fScale < 1.f)
+	{
+		m_fScale *= 1.01f;
+		SetScale(XMFLOAT3(1.01f, 1.01f, 1.01f));
+	}
+
+
 	if (m_eState == CEnemy::BEGIN)
 	{
-		// 돌면서 크기 커지면서 아래로 내려옴
-		// 터레인의 높이보다 작아지면 터레인 태움 && 상태 NORMAL로 변경
+		// 돌면서 아래로 내려옴
+		Rotate(0.f, fTimeElapsed * m_fRotationSpeed, 0.f);
+		MoveUp(-m_fDownSpeed * fTimeElapsed);
 
+		// 터레인의 높이보다 작아지면 터레인 태움 && 상태 NORMAL로 변경
+		XMFLOAT3 pos = GetPosition();
+		if (m_pTerrain->GetHeight(pos.x, pos.z) + m_fMeshHeightHalf> pos.y)
+		{
+			m_eState = NORMAL;
+			SetPosition(pos.x, m_pTerrain->GetHeight(pos.x, pos.z) + m_fMeshHeightHalf, pos.z);
+		}
 	}
 	else
 	{
-
+		m_fBulletCreateTime += fTimeElapsed;
+		if (m_fBulletCreateTime > 5.f)
+		{
+			// 노멀이면 총알 생성!!!
+			CBullet* pBullet = new CBullet(1);
+			pBullet->SetPosition(GetPosition());
+			XMFLOAT3 PlayerPos = m_pObjectsShader->GetPlayer()->GetPosition();
+			XMFLOAT3 vDir = Vector3::Normalize(Vector3::Subtract(PlayerPos, GetPosition()));
+			pBullet->SetDir(vDir);
+			m_pObjectsShader->AddObject(OBJ::MONSTER_BULLET, pBullet);
+			// 랜덤한 시간마다 !!
+			m_fBulletCreateTime = float(rand() % 5) * 0.5f;
+		}
+	
 	}
 }
 
@@ -422,4 +453,21 @@ void CTerrainObject::OnObjectUpdateCallback(float fTimeElapsed)
 {
 	XMFLOAT3 xmf3PlayerPosition = GetPosition();
 	float fHeight = m_pTerrain->GetHeight(xmf3PlayerPosition.x, xmf3PlayerPosition.z) + 6.0f;
+}
+
+CBullet::CBullet(int nMeshes)
+{
+	m_fSpeed = 80.f;
+
+
+}
+
+CBullet::~CBullet()
+{
+}
+
+void CBullet::Animate(float fTimeElapsed)
+{
+	MoveByDir(m_fSpeed * fTimeElapsed);
+	Rotate(200.f * fTimeElapsed, 300.f * fTimeElapsed, 200.f * fTimeElapsed);
 }

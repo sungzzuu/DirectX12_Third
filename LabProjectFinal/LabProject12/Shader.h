@@ -80,6 +80,7 @@ public:
 
 public:
 	void SetPlayer(CPlayer* pPlayer) { m_pPlayer = pPlayer; }
+	CPlayer* GetPlayer() { return m_pPlayer; }
 	void SetTerrain(CHeightMapTerrain* pTerrain) { m_pTerrain = pTerrain; }
 	// 아군 생성 함수
 	void BuildMyTeam();
@@ -89,6 +90,10 @@ public:
 	// 충돌체크 함수
 	void Collision_Check();
 
+	// 외부에서 객체 추가하는 함수
+	void AddObject(OBJ::OBJID _eID, CGameObject* pObject);
+
+	
 protected:
 	list<CGameObject*>						m_listObjects[OBJ::END_OBJID];
 	CPlayer*								m_pPlayer;
@@ -105,6 +110,7 @@ protected:
 	CModelMeshDiffused*						m_pEnemyFlyerShipMesh;	// 적군 비행기 메쉬
 	CModelMeshDiffused*						m_pBaseMesh;			// 기지 메쉬
 	CCubeMeshDiffused*						m_pCubeEnemyMesh;		// 적군 메쉬
+	CCubeMeshDiffused*						m_pCubeEnemyBulletMesh;			// 적군 총알 메쉬
 };
 
 class CTerrainShader : public CShader

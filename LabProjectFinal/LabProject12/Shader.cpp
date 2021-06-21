@@ -236,7 +236,7 @@ void CObjectsShader::InitBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 	m_pEnemyFlyerShipMesh = new CModelMeshDiffused(pd3dDevice, pd3dCommandList, "Models/FlyerPlayership.txt", true); // 적군 우주선 메쉬
 	m_pBaseMesh = new CModelMeshDiffused(pd3dDevice, pd3dCommandList, "Models/ams_house3.bin", false); // 기지 메쉬
 	m_pCubeEnemyMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 8.f, 8.f, 8.f, OBJ::RED);
-
+	m_pCubeEnemyBulletMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 3.f, 3.f, 3.f, OBJ::YELLOW);
 
 
 	/* 아군 생성 지점 만드는 부분 */
@@ -499,7 +499,9 @@ void CObjectsShader::BuildEnemy(XMFLOAT3 spotPos)
 	{
 		CEnemy* pEnemy = new CEnemy(m_pTerrain, 4.f, 1);
 		pEnemy->SetMesh(0, m_pCubeEnemyMesh);
+		pEnemy->SetScale(XMFLOAT3(0.1f, 0.1f, 0.1f));
 		pEnemy->SetPosition(spotPos.x - 10.f + i * 20.f, spotPos.y, spotPos.z);
+		pEnemy->SetObjectsShader(this);
 		m_listObjects[OBJ::ENEMY].push_back(pEnemy);
 	}
 
@@ -534,6 +536,15 @@ void CObjectsShader::Collision_Check()
 			break;
 		}
 	}
+}
+
+void CObjectsShader::AddObject(OBJ::OBJID _eID, CGameObject* pObject)
+{
+	if (_eID == OBJ::MONSTER_BULLET)
+	{
+		pObject->SetMesh(0, m_pCubeEnemyBulletMesh);
+	}
+	m_listObjects[_eID].push_back(pObject);
 }
 
 CTerrainShader::CTerrainShader()
