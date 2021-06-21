@@ -20,6 +20,9 @@ protected:
 	//게임 객체는 여러 개의 메쉬를 포함하는 경우 게임 객체가 가지는 메쉬들에 대한 포인터와 그 개수이다.
 	CMesh** m_ppMeshes = NULL;
 	int m_nMeshes = 0;
+	// 객체 스케일 지정
+	XMFLOAT3					m_f3Scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+
 public:
 	BoundingOrientedBox			m_xmOOBB;
 
@@ -27,6 +30,8 @@ public:
 	void ReleaseUploadBuffers(); 
 	virtual void SetMesh(int nIndex, CMesh* pMesh);
 	virtual void SetShader(CShader* pShader);
+	virtual void SetScale(XMFLOAT3 xmf3scale);
+
 	virtual void Animate(float fTimeElapsed);
 	virtual void OnPrepareRender();
 	void Rotate(XMFLOAT3* pxmf3Axis, float fAngle);

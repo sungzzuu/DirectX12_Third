@@ -228,6 +228,13 @@ void CObjectsShader::InitBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 	ID3D12RootSignature* pd3dGraphicsRootSignature, void* pContext)
 {
 	SetTerrain((CHeightMapTerrain*)pContext);
+	/* 사용할 메쉬 미리 만들어 놓는 부분*/
+	m_pCubeMyTeamMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 6.f, 6.f, 6.f, OBJ::BLUE); // 아군 메쉬
+	m_pCubeMySpotMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 6.0f, 20.0f, 6.0f, OBJ::BLUE); // 아군 스팟 메쉬
+	m_pCubeEnemySpotMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 6.0f, 20.0f, 6.0f, OBJ::RED); // 적군 스팟 메쉬
+
+	m_pEnemyFlyerShipMesh = new CFlyerShipMeshDiffused(pd3dDevice, pd3dCommandList, "Models/FlyerPlayership.txt", true);
+
 
 	/* 아군 생성 지점 만드는 부분 */
 	// 아군 지점 20,fheight, 100에 설치
@@ -240,11 +247,10 @@ void CObjectsShader::InitBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 
 	for(int i = 0; i < 5; ++i)
 	{
-		CCubeMeshDiffused* pCubeMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 6.0f, 20.0f, 6.0f, RANDOM_RED);
 		XMFLOAT3 xmf3RotateAxis, xmf3SurfaceNormal;
 		CRotatingFlagObject* pFlagObject = NULL;
 		pFlagObject = new CRotatingFlagObject(1);
-		pFlagObject->SetMesh(0, pCubeMesh);
+		pFlagObject->SetMesh(0, m_pCubeMySpotMesh);
 		pFlagObject->SetPosition(pos[i].x, m_pTerrain->GetHeight(pos[i].x, pos[i].z) + 10.f, pos[i].z);
 		pFlagObject->SetState(CRotatingFlagObject::NORMAL);
 		xmf3SurfaceNormal = m_pTerrain->GetNormal(pos[i].x, pos[i].z);
@@ -260,12 +266,58 @@ void CObjectsShader::InitBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 
 		m_listObjects[OBJ::FLAG].push_back(pFlagObject);
 	}
-	
+	//=========================================================================================================
 
+	/* 적군 지점 생성*/
+	pos[0] = { 100, 0, 500 };
+	pos[1] = { 500, 0, 700 };
+	pos[2] = { 1000, 0, 800 };
+	pos[3] = { 800, 0, 1300 };
+	pos[4] = { 1500, 0, 1800 };
 
-	/* 사용할 메쉬 미리 만들어 놓는 부분*/
-	// 아군 메쉬
-	m_pCubeMyTeamMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 6.f, 6.f, 6.f, RANDOM_RED);
+	for(int i = 0; i < 5; ++i)
+	{
+		XMFLOAT3 xmf3RotateAxis, xmf3SurfaceNormal;
+		CRotatingFlagObject* pFlagObject = NULL;
+		pFlagObject = new CRotatingFlagObject(1);
+		pFlagObject->SetMesh(0, m_pCubeEnemySpotMesh);
+		pFlagObject->SetPosition(pos[i].x, m_pTerrain->GetHeight(pos[i].x, pos[i].z) + 10.f, pos[i].z);
+		pFlagObject->SetState(CRotatingFlagObject::NORMAL);
+		xmf3SurfaceNormal = m_pTerrain->GetNormal(pos[i].x, pos[i].z);
+		xmf3RotateAxis = Vector3::CrossProduct(XMFLOAT3(0.0f, 1.0f, 0.0f),
+			xmf3SurfaceNormal);
+		if (Vector3::IsZero(xmf3RotateAxis)) xmf3RotateAxis = XMFLOAT3(0.0f, 1.0f,
+			0.0f);
+		float fAngle = acos(Vector3::DotProduct(XMFLOAT3(0.0f, 1.0f, 0.0f),
+			xmf3SurfaceNormal));
+		pFlagObject->Rotate(&xmf3RotateAxis, XMConvertToDegrees(fAngle));
+		pFlagObject->SetRotationAxis(XMFLOAT3(0.0f, 1.0f, 0.0f));
+		pFlagObject->SetRotationSpeed(36.0f);
+
+		m_listObjects[OBJ::FLAG].push_back(pFlagObject);
+	}
+	//=========================================================================================================
+
+	//// 비행기 테스트 출력
+	//XMFLOAT3 xmf3RotateAxis, xmf3SurfaceNormal;
+	//CRotatingFlagObject* pEnemyFlyerShip = NULL;
+	//pEnemyFlyerShip = new CRotatingFlagObject(1);
+	//pEnemyFlyerShip->SetMesh(0, m_pEnemyFlyerShipMesh);
+	//pEnemyFlyerShip->SetPosition(0, m_pTerrain->GetHeight(0, 100) + 20.f, 100);
+	//pEnemyFlyerShip->SetState(CRotatingFlagObject::NORMAL);
+	//pEnemyFlyerShip->SetScale(XMFLOAT3(10.f, 10.f, 10.f));
+	//xmf3SurfaceNormal = m_pTerrain->GetNormal(0, 100);
+	//xmf3RotateAxis = Vector3::CrossProduct(XMFLOAT3(0.0f, 1.0f, 0.0f),
+	//	xmf3SurfaceNormal);
+	//if (Vector3::IsZero(xmf3RotateAxis)) xmf3RotateAxis = XMFLOAT3(0.0f, 1.0f,
+	//	0.0f);
+	//float fAngle = acos(Vector3::DotProduct(XMFLOAT3(0.0f, 1.0f, 0.0f),
+	//	xmf3SurfaceNormal));
+	//pEnemyFlyerShip->Rotate(&xmf3RotateAxis, XMConvertToDegrees(fAngle));
+	//pEnemyFlyerShip->SetRotationAxis(XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//pEnemyFlyerShip->SetRotationSpeed(36.0f);
+
+	//m_listObjects[OBJ::FLAG].push_back(pEnemyFlyerShip);
 
 
 	//float fTerrainWidth = pTerrain->GetWidth(), fTerrainLength = pTerrain->GetLength();

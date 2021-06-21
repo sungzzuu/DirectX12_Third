@@ -94,7 +94,10 @@ protected:
 
 protected:
 	// 메쉬를 미리 만들어 놓는다.
-	CCubeMeshDiffused*						m_pCubeMyTeamMesh;
+	CCubeMeshDiffused*						m_pCubeMyTeamMesh; // 아군 메쉬
+	CCubeMeshDiffused*						m_pCubeMySpotMesh; // 아군 지점 메쉬
+	CCubeMeshDiffused*						m_pCubeEnemySpotMesh; // 적군 지점 메쉬
+	CFlyerShipMeshDiffused*					m_pEnemyFlyerShipMesh; // 적군 비행기 메쉬
 };
 
 class CTerrainShader : public CShader

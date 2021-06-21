@@ -92,7 +92,7 @@ XMFLOAT4 CMesh::getColor(OBJ::COLOR _color)
 }
 
 CCubeMeshDiffused::CCubeMeshDiffused(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList
-	* pd3dCommandList, float fWidth, float fHeight, float fDepth, XMFLOAT4 xmf4Color) : CMesh(pd3dDevice,
+	* pd3dCommandList, float fWidth, float fHeight, float fDepth, OBJ::COLOR eColor) : CMesh(pd3dDevice,
 		pd3dCommandList)
 {
 	//직육면체는 6개의 면 가로(x-축) 길이
@@ -105,17 +105,17 @@ CCubeMeshDiffused::CCubeMeshDiffused(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 	m_d3dPrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 	//fWidth: 직육면체 가로(x-축) 길이, fHeight: 직육면체 세로(y-축) 길이, fDepth: 직육면체 깊이(z-축) 길이
 	float fx = fWidth*0.5f, fy = fHeight*0.5f, fz = fDepth*0.5f;
-
+	
 	//정점 버퍼는 직육면체의 꼭지점 8개에 대한 정점 데이터를 가진다. 
 	CDiffusedVertex pVertices[8];
-	pVertices[0] = CDiffusedVertex(XMFLOAT3(-fx, +fy, -fz), RANDOM_RED);
-	pVertices[1] = CDiffusedVertex(XMFLOAT3(+fx, +fy, -fz), RANDOM_RED);
-	pVertices[2] = CDiffusedVertex(XMFLOAT3(+fx, +fy, +fz), RANDOM_RED);
-	pVertices[3] = CDiffusedVertex(XMFLOAT3(-fx, +fy, +fz), RANDOM_RED);
-	pVertices[4] = CDiffusedVertex(XMFLOAT3(-fx, -fy, -fz), RANDOM_RED);
-	pVertices[5] = CDiffusedVertex(XMFLOAT3(+fx, -fy, -fz), RANDOM_RED);
-	pVertices[6] = CDiffusedVertex(XMFLOAT3(+fx, -fy, +fz), RANDOM_RED);
-	pVertices[7] = CDiffusedVertex(XMFLOAT3(-fx, -fy, +fz), RANDOM_RED);
+	pVertices[0] = CDiffusedVertex(XMFLOAT3(-fx, +fy, -fz), getColor(eColor));
+	pVertices[1] = CDiffusedVertex(XMFLOAT3(+fx, +fy, -fz), getColor(eColor));
+	pVertices[2] = CDiffusedVertex(XMFLOAT3(+fx, +fy, +fz), getColor(eColor));
+	pVertices[3] = CDiffusedVertex(XMFLOAT3(-fx, +fy, +fz), getColor(eColor));
+	pVertices[4] = CDiffusedVertex(XMFLOAT3(-fx, -fy, -fz), getColor(eColor));
+	pVertices[5] = CDiffusedVertex(XMFLOAT3(+fx, -fy, -fz), getColor(eColor));
+	pVertices[6] = CDiffusedVertex(XMFLOAT3(+fx, -fy, +fz), getColor(eColor));
+	pVertices[7] = CDiffusedVertex(XMFLOAT3(-fx, -fy, +fz), getColor(eColor));
 	m_pd3dVertexBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, pVertices,
 		m_nStride * m_nVertices, D3D12_HEAP_TYPE_DEFAULT,
 		D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pd3dVertexUploadBuffer);
@@ -575,4 +575,195 @@ XMFLOAT4 CHeightMapGridMesh::OnGetColor(int x, int z, void* pContext)
 	//fScale은 조명 색상(밝기)이 반사되는 비율이다. 
 	XMFLOAT4 xmf4Color = Vector4::Multiply(fScale, xmf4IncidentLightColor);
 	return(xmf4Color);
+}
+
+CFlyerShipMeshDiffused::CFlyerShipMeshDiffused(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, char* pstrFileName, bool bTextFile)
+	: CMesh(pd3dDevice, pd3dCommandList)
+{
+	LoadMeshFromFile(pd3dDevice, pd3dCommandList, pstrFileName, bTextFile);
+}
+
+CFlyerShipMeshDiffused::~CFlyerShipMeshDiffused()
+{
+}
+
+void CFlyerShipMeshDiffused::LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, char* pstrFileName, bool bTextFile)
+{
+	char pstrToken[64] = { '\0' };
+
+	XMFLOAT3* pVertices = nullptr;
+	XMFLOAT3* pNormals = nullptr;
+	XMFLOAT2* pTextureCoords = nullptr;
+	UINT* pIndices = nullptr;
+
+	m_nStride = sizeof(CDiffusedVertex);
+	m_nOffset = 0;
+	m_nSlot = 0;
+	m_d3dPrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+	if (bTextFile)
+	{
+		ifstream InFile(pstrFileName);
+
+		for (; ; )
+		{
+			InFile >> pstrToken;
+			if (!InFile) break;
+
+			if (!strcmp(pstrToken, "<Vertices>:"))
+			{
+				InFile >> m_nVertices;
+				pVertices = new XMFLOAT3[m_nVertices];
+				for (UINT i = 0; i < m_nVertices; i++)
+					InFile >> pVertices[i].x >> pVertices[i].y >> pVertices[i].z;
+			}
+			else if (!strcmp(pstrToken, "<Normals>:"))
+			{
+				InFile >> pstrToken;
+				pNormals = new XMFLOAT3[m_nVertices];
+				for (UINT i = 0; i < m_nVertices; i++)
+					InFile >> pNormals[i].x >> pNormals[i].y >> pNormals[i].z;
+			}
+			else if (!strcmp(pstrToken, "<TextureCoords>:"))
+			{
+				InFile >> pstrToken;
+				pTextureCoords = new XMFLOAT2[m_nVertices];
+				for (UINT i = 0; i < m_nVertices; i++)
+					InFile >> pTextureCoords[i].x >> pTextureCoords[i].y;
+			}
+			else if (!strcmp(pstrToken, "<Indices>:"))
+			{
+				InFile >> m_nIndices;
+				pIndices = new UINT[m_nIndices];
+				for (UINT i = 0; i < m_nIndices; i++)
+					InFile >> pIndices[i];
+			}
+		}
+	}
+	else if (bTextFile) // OBJ 파일
+	{
+
+		/*FILE* file = fopen(pstrFileName, "r");
+
+		while (1) {
+			char lineHeader[128];
+
+			int res = fscanf(file, "%s", lineHeader);
+			if (res == EOF)
+				break;
+			if (strcmp(lineHeader, "v") == 0) {
+				XMFLOAT3 vertex;
+				fscanf(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+				pVertices.push_back(vertex);
+			}
+			else if (strcmp(lineHeader, "vt") == 0) {
+				glm::vec2 uv;
+				fscanf(file, "%f %f\n", &uv.x, &uv.y);
+				temp_uvs.push_back(uv);
+			}
+			else if (strcmp(lineHeader, "vn") == 0) {
+				glm::vec3 normal;
+				fscanf(file, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
+				temp_normals.push_back(normal);
+			}
+			else if (strcmp(lineHeader, "f") == 0) {
+				string vertex1, vertex2, vertex3;
+				unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
+				int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
+				if (matches != 9) {
+					printf("File can't be read by our simple parser : ( Try exporting with other options\n");
+					return false;
+				}
+				vertexIndices.push_back(vertexIndex[0]);
+				vertexIndices.push_back(vertexIndex[1]);
+				vertexIndices.push_back(vertexIndex[2]);
+				uvIndices.push_back(uvIndex[0]);
+				uvIndices.push_back(uvIndex[1]);
+				uvIndices.push_back(uvIndex[2]);
+				normalIndices.push_back(normalIndex[0]);
+				normalIndices.push_back(normalIndex[1]);
+				normalIndices.push_back(normalIndex[2]);
+			}
+		}
+		for (unsigned int i = 0; i < vertexIndices.size(); ++i) {
+			unsigned int vertexIndex = vertexIndices[i];
+			glm::vec3 vertex = temp_vertices[vertexIndex - 1];
+
+			unsigned int normalIndex = normalIndices[i];
+			glm::vec3 normal = temp_normals[normalIndex - 1];
+
+			object.vertices.push_back(vertex);
+			object.normals.push_back(normal);
+			object.color.push_back(_color);
+
+		}*/
+	}
+	else
+	{
+		FILE* pFile = NULL;
+		::fopen_s(&pFile, pstrFileName, "rb");
+		::rewind(pFile);
+
+		char pstrToken[64] = { '\0' };
+
+		BYTE nStrLength = 0;
+		UINT nReads = 0;
+
+		nReads = (UINT)::fread(&nStrLength, sizeof(BYTE), 1, pFile);
+		nReads = (UINT)::fread(pstrToken, sizeof(char), 14, pFile); //"<BoundingBox>:"
+		nReads = (UINT)::fread(&m_xmOOBB.Center, sizeof(float), 3, pFile);
+		nReads = (UINT)::fread(&m_xmOOBB.Extents, sizeof(float), 3, pFile);
+
+		nReads = (UINT)::fread(&nStrLength, sizeof(BYTE), 1, pFile);
+		nReads = (UINT)::fread(pstrToken, sizeof(char), 11, pFile); //"<Vertices>:"
+		nReads = (UINT)::fread(&m_nVertices, sizeof(int), 1, pFile);
+		pVertices = new XMFLOAT3[m_nVertices];
+		nReads = (UINT)::fread(pVertices, sizeof(float), 3 * m_nVertices, pFile);
+
+		nReads = (UINT)::fread(&nStrLength, sizeof(BYTE), 1, pFile);
+		nReads = (UINT)::fread(pstrToken, sizeof(char), 10, pFile); //"<Normals>:"
+		nReads = (UINT)::fread(&m_nVertices, sizeof(int), 1, pFile);
+		pNormals = new XMFLOAT3[m_nVertices];
+		nReads = (UINT)::fread(pNormals, sizeof(float), 3 * m_nVertices, pFile);
+
+		nReads = (UINT)::fread(&nStrLength, sizeof(BYTE), 1, pFile);
+		nReads = (UINT)::fread(pstrToken, sizeof(char), 16, pFile); //"<TextureCoords>:"
+		nReads = (UINT)::fread(&m_nVertices, sizeof(int), 1, pFile);
+		pTextureCoords = new XMFLOAT2[m_nVertices];
+		nReads = (UINT)::fread(pTextureCoords, sizeof(float), 2 * m_nVertices, pFile);
+
+		nReads = (UINT)::fread(&nStrLength, sizeof(BYTE), 1, pFile);
+		nReads = (UINT)::fread(pstrToken, sizeof(char), 10, pFile); //"<Indices>:"
+		nReads = (UINT)::fread(&m_nIndices, sizeof(int), 1, pFile);
+		pIndices = new UINT[m_nIndices];
+		nReads = (UINT)::fread(pIndices, sizeof(UINT), m_nIndices, pFile);
+
+		::fclose(pFile);
+	}
+	// 정점에 색상을 추가하기
+	CDiffusedVertex* pDiffusedVertices = new CDiffusedVertex[m_nVertices];
+	for (int i = 0; i < m_nVertices; ++i)
+	{
+		pDiffusedVertices[i] = CDiffusedVertex(pVertices[i], RANDOM_COLOR);
+	}
+
+	m_pd3dVertexBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, pDiffusedVertices,
+		m_nStride * m_nVertices, D3D12_HEAP_TYPE_DEFAULT,
+		D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pd3dVertexUploadBuffer);
+
+
+	m_d3dVertexBufferView.BufferLocation = m_pd3dVertexBuffer->GetGPUVirtualAddress();
+	m_d3dVertexBufferView.StrideInBytes = m_nStride;
+	m_d3dVertexBufferView.SizeInBytes = m_nStride * m_nVertices;
+
+
+	m_pd3dIndexBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, pIndices,
+		sizeof(UINT) * m_nIndices,
+		D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_INDEX_BUFFER,
+		&m_pd3dIndexUploadBuffer);
+
+	m_d3dIndexBufferView.BufferLocation = m_pd3dIndexBuffer->GetGPUVirtualAddress();
+	m_d3dIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
+	m_d3dIndexBufferView.SizeInBytes = sizeof(UINT) * m_nIndices;
+	//m_xmOOBB = BoundingOrientedBox(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(fx, fy, fz), XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
 }

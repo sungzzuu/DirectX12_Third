@@ -74,8 +74,22 @@ public:
 
 public:
 	BoundingOrientedBox			m_xmOOBB;
+
+
+
 };
 
+class CFlyerShipMeshDiffused : public CMesh
+{
+public:
+	CFlyerShipMeshDiffused(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList
+		* pd3dCommandList, char* pstrFileName, bool bTextFile);
+	virtual ~CFlyerShipMeshDiffused();
+public:
+	void LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
+		char* pstrFileName, bool bTextFile);
+
+};
 class CTriangleMesh : public CMesh
 {
 public:
@@ -88,8 +102,7 @@ class CCubeMeshDiffused : public CMesh
 public:
 	//직육면체의 가로, 세로, 깊이의 길이를 지정하여 직육면체 메쉬를 생성한다. 
 	CCubeMeshDiffused(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList 
-	*pd3dCommandList, float fWidth = 2.0f, float fHeight = 2.0f, float fDepth = 2.0f,
-		XMFLOAT4 xmf4Color=RANDOM_COLOR);
+	*pd3dCommandList, float fWidth = 2.0f, float fHeight = 2.0f, float fDepth = 2.0f, OBJ::COLOR eColor=OBJ::RANDOM);
 	virtual ~CCubeMeshDiffused();
 };
 
@@ -100,8 +113,6 @@ public:
 		* pd3dCommandList, float fWidth = 20.0f, float fHeight = 20.0f, float fDepth = 4.0f,
 		XMFLOAT4 xmf4Color = XMFLOAT4(1.0f, 1.0f, 0.0f, 0.0f));
 	virtual ~CAirplaneMeshDiffused();
-
-
 };
 
 class CHeightMapImage

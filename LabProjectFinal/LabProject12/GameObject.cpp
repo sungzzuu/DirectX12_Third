@@ -38,6 +38,13 @@ void CGameObject::SetShader(CShader* pShader)
 	if (m_pShader) m_pShader->AddRef();
 }
 
+void CGameObject::SetScale(XMFLOAT3 xmf3scale)
+{
+	m_f3Scale = xmf3scale;
+	XMStoreFloat4x4(&m_xmf4x4World, XMMatrixMultiply(XMMatrixScaling(m_f3Scale.x, m_f3Scale.y, m_f3Scale.z), XMLoadFloat4x4(&m_xmf4x4World)));
+
+}
+
 void CGameObject::Animate(float fTimeElapsed)
 {
 	UpdateBoundingBox();

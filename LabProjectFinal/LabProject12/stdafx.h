@@ -24,6 +24,10 @@
 #include <shellapi.h>
 #include <iostream>
 
+#include <fstream>
+#include <stdio.h>
+#include <wchar.h>
+
 #include "enum.h"
 #include "define.h"
 
