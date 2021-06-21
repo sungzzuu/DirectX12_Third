@@ -36,7 +36,7 @@ public:
 	virtual void SetShader(CShader* pShader);
 	virtual void SetScale(XMFLOAT3 xmf3scale);
 	virtual XMFLOAT3 GetScale() {return XMFLOAT3(m_xmf4x4World._11, m_xmf4x4World._22, m_xmf4x4World._33);}
-	virtual void Animate(float fTimeElapsed);
+	virtual bool Animate(float fTimeElapsed);
 	virtual void OnPrepareRender();
 	void Rotate(XMFLOAT3* pxmf3Axis, float fAngle);
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
@@ -89,7 +89,7 @@ private:
 public:
 	void SetRotationSpeed(float fRotationSpeed) { m_fRotationSpeed = fRotationSpeed; }
 	void SetRotationAxis(XMFLOAT3 xmf3RotationAxis) {m_xmf3RotationAxis = xmf3RotationAxis;}
-	virtual void Animate(float fTimeElapsed);
+	virtual bool Animate(float fTimeElapsed);
 	STATE GetState() { return m_eState; }
 	void SetState(STATE _eState);
 	void SetMyTeam(bool bMyTeam) { m_bMyTeam = bMyTeam; }
@@ -123,7 +123,7 @@ public:
 	void			SetState(STATE _eState) { m_eState = _eState; }
 	void			SetTargetPos(XMFLOAT3 pos) { m_pTargetPos = pos; }
 	void			SetSpeed(float fSpeed) { m_fSpeed = fSpeed; }
-	virtual void	Animate(float fTimeElapsed);
+	virtual bool	Animate(float fTimeElapsed);
 	bool			SpawnCheck();
 
 };
@@ -177,7 +177,9 @@ public:
 	virtual void OnObjectUpdateCallback(float fTimeElapsed);
 	void SetTerrain(CHeightMapTerrain* pTerrain) { m_pTerrain = pTerrain; }
 	void SetMeshHeightHalf(float fheight) { m_fMeshHeightHalf = fheight; }
-	virtual void Animate(float fTimeElapsed) {};
+	virtual bool Animate(float fTimeElapsed) {
+		return OBJ_NONE;
+	};
 
 protected:
 	CHeightMapTerrain*				m_pTerrain;
@@ -193,7 +195,7 @@ public:
 	virtual ~CEnemy();
 
 public:
-	virtual void	Animate(float fTimeElapsed);
+	virtual bool	Animate(float fTimeElapsed);
 private:
 	STATE		m_eState;
 	float		m_fRotationSpeed;
@@ -209,7 +211,7 @@ public:
 	CMyTeamObject(void* pContext, void* pPlayer, XMFLOAT3 xmf3Offset, float fMeshHeightHalf, int nMeshes = 1);
 	virtual ~CMyTeamObject();
 	void SetPlayer(CPlayer* pPlayer) { m_pPlayer = pPlayer; }
-	virtual void Animate(float fTimeElapsed);
+	virtual bool Animate(float fTimeElapsed);
 
 private:
 	CPlayer*						m_pPlayer;
@@ -222,10 +224,10 @@ class CBullet : public CGameObject
 public:
 	CBullet(int nMeshes=1);
 	virtual ~CBullet();
-	virtual void Animate(float fTimeElapsed);
+	virtual bool Animate(float fTimeElapsed);
 
 private:
 	float			m_fSpeed;
-
+	float			m_fCreateTime = 0.f;
 
 };

@@ -405,9 +405,6 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	// 좌표가 지형의 높이보다 크고 중력이 작용하도록 플레이어를 설정하였으므로 플레이어는 점차적으로 하강하게 된다.
 		float fHeight = pTerrain->GetHeight(50, 150);
 	SetPosition(XMFLOAT3(50, fHeight, 150));
-
-	cout << pTerrain->GetWidth() << endl;
-	cout << pTerrain->GetLength() << endl;
 	//플레이어의 위치가 변경될 때 지형의 정보에 따라 플레이어의 위치를 변경할 수 있도록 설정한다. 
 	SetPlayerUpdatedContext(pTerrain);
 	

@@ -352,13 +352,19 @@ void CObjectsShader::AnimateObjects(float fTimeElapsed)
 {
 	for (int i = 0; i < OBJ::END_OBJID; ++i)
 	{
-		for (auto& object : m_listObjects[i])
+		for (auto iter = m_listObjects[i].begin(); iter != m_listObjects[i].end();)
 		{
 			if (i == OBJ::FLYSHIP)
-				if (dynamic_cast<CEnemyFlyShip*>(object)->SpawnCheck())
-					BuildEnemy(object->GetPosition());
+				if (dynamic_cast<CEnemyFlyShip*>(*iter)->SpawnCheck())
+					BuildEnemy((*iter)->GetPosition());
 
-			object->Animate(fTimeElapsed);
+			if ((*iter)->Animate(fTimeElapsed) == OBJ_DEAD)
+			{
+				iter = m_listObjects[i].erase(iter);
+				cout << "객체 삭제" << endl;
+			}
+			else
+				++iter;
 		}
 	}
 	Collision_Check();
@@ -376,6 +382,15 @@ void CObjectsShader::ReleaseObjects()
 		m_listObjects[i].clear();
 
 	}
+
+	// 메쉬 삭제
+	delete m_pCubeMyTeamMesh;		// 아군 메쉬
+	delete m_pCubeMySpotMesh;		// 아군 지점 메쉬
+	delete m_pCubeEnemySpotMesh;	// 적군 지점 메쉬
+	delete m_pEnemyFlyerShipMesh;	// 적군 비행기 메쉬
+	delete m_pBaseMesh;				// 기지 메쉬
+	delete m_pCubeEnemyMesh;		// 적군 메쉬
+	delete m_pCubeEnemyBulletMesh;	// 적군 총알 메쉬
 }
 
 D3D12_INPUT_LAYOUT_DESC CObjectsShader::CreateInputLayout()

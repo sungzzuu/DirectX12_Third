@@ -45,10 +45,11 @@ void CGameObject::SetScale(XMFLOAT3 xmf3scale)
 
 }
 
-void CGameObject::Animate(float fTimeElapsed)
+bool CGameObject::Animate(float fTimeElapsed)
 {
 	UpdateBoundingBox();
 
+	return OBJ_NONE;
 }
 
 void CGameObject::OnPrepareRender()
@@ -81,7 +82,6 @@ void CGameObject::UpdateBoundingBox()
 	{
 		m_ppMeshes[0]->m_xmOOBB.Transform(m_xmOOBB, XMLoadFloat4x4(&m_xmf4x4World));
 		XMStoreFloat4(&m_xmOOBB.Orientation, XMQuaternionNormalize(XMLoadFloat4(&m_xmOOBB.Orientation)));
-		cout << m_xmOOBB.Center.x << endl;
 	}
 }
 
@@ -216,7 +216,7 @@ CRotatingFlagObject::~CRotatingFlagObject()
 {
 }
 
-void CRotatingFlagObject::Animate(float fTimeElapsed)
+bool CRotatingFlagObject::Animate(float fTimeElapsed)
 {
 	CGameObject::Rotate(&m_xmf3RotationAxis, m_fRotationSpeed * fTimeElapsed);
 	if (m_eState == DOWN)
@@ -233,6 +233,9 @@ void CRotatingFlagObject::Animate(float fTimeElapsed)
 			SetPosition(pos.x, pos.y - 15.f * fTimeElapsed, pos.z);
 	}
 	UpdateBoundingBox();
+
+	return OBJ_NONE;
+
 }
 
 void CRotatingFlagObject::SetState(STATE _eState)
@@ -319,7 +322,7 @@ CMyTeamObject::CMyTeamObject(void* pContext, void* pPlayer, XMFLOAT3 xmf3Offset,
 CMyTeamObject::~CMyTeamObject()
 {
 }
-void CMyTeamObject::Animate(float fTimeElapsed)
+bool CMyTeamObject::Animate(float fTimeElapsed)
 {
 	// 플레이어와 오프셋을 유지하며 쫓아가기
 	XMFLOAT3 playerPos = m_pPlayer->GetPosition();
@@ -327,6 +330,7 @@ void CMyTeamObject::Animate(float fTimeElapsed)
 	SetPosition(newPos.x, m_pTerrain->GetHeight(newPos.x, newPos.z) + m_fMeshHeightHalf, newPos.z);
 	OnObjectUpdateCallback(fTimeElapsed);
 	UpdateBoundingBox();
+	return OBJ_NONE;
 
 }
 
@@ -339,7 +343,7 @@ CEnemyFlyShip::~CEnemyFlyShip()
 {
 }
 
-void CEnemyFlyShip::Animate(float fTimeElapsed)
+bool CEnemyFlyShip::Animate(float fTimeElapsed)
 {
 	switch (m_eState)
 	{
@@ -367,6 +371,11 @@ void CEnemyFlyShip::Animate(float fTimeElapsed)
 	default:
 		break;
 	}
+	if (GetPosition().z < 0.f )
+		return OBJ_DEAD;
+
+	return OBJ_NONE;
+
 }
 
 bool CEnemyFlyShip::SpawnCheck()
@@ -395,7 +404,7 @@ CEnemy::~CEnemy()
 {
 }
 
-void CEnemy::Animate(float fTimeElapsed)
+bool CEnemy::Animate(float fTimeElapsed)
 {
 	if (m_fScale < 1.f)
 	{
@@ -435,6 +444,9 @@ void CEnemy::Animate(float fTimeElapsed)
 		}
 	
 	}
+
+	return OBJ_NONE;
+
 }
 
 CTerrainObject::CTerrainObject(void* pContext, float fMeshHeightHalf, int nMeshes)
@@ -458,7 +470,7 @@ void CTerrainObject::OnObjectUpdateCallback(float fTimeElapsed)
 CBullet::CBullet(int nMeshes)
 {
 	m_fSpeed = 80.f;
-
+	m_fCreateTime = 0.f;
 
 }
 
@@ -466,8 +478,15 @@ CBullet::~CBullet()
 {
 }
 
-void CBullet::Animate(float fTimeElapsed)
+bool CBullet::Animate(float fTimeElapsed)
 {
 	MoveByDir(m_fSpeed * fTimeElapsed);
 	Rotate(200.f * fTimeElapsed, 300.f * fTimeElapsed, 200.f * fTimeElapsed);
+	UpdateBoundingBox();
+
+	// 플레이어에서 멀어지면 삭제
+	m_fCreateTime += fTimeElapsed;
+	if(m_fCreateTime > 10.f)
+		return OBJ_DEAD;
+	return OBJ_NONE;
 }
