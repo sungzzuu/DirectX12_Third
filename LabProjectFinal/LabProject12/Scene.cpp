@@ -27,12 +27,17 @@ ID3D12RootSignature* CScene::GetGraphicsRootSignature()
 	return(m_pd3dGraphicsRootSignature);
 }
 
+void CScene::AddPlayerBullet()
+{
+	m_pShaders[0].AddPlayerBullet();
+}
+
 ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevice)
 {
 	ID3D12RootSignature* pd3dGraphicsRootSignature = NULL;
 	D3D12_ROOT_PARAMETER pd3dRootParameters[2];
 	pd3dRootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-	pd3dRootParameters[0].Constants.Num32BitValues = 16;
+	pd3dRootParameters[0].Constants.Num32BitValues = 20/*16*/;
 	pd3dRootParameters[0].Constants.ShaderRegister = 0;
 	pd3dRootParameters[0].Constants.RegisterSpace = 0;
 	pd3dRootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;

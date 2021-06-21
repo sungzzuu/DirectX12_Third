@@ -95,6 +95,8 @@ void CGameObject::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandLi
 	XMStoreFloat4x4(&xmf4x4World, XMMatrixTranspose(XMLoadFloat4x4(&m_xmf4x4World)));
 	//객체의 월드 변환 행렬을 루트 상수(32-비트 값)를 통하여 셰이더 변수(상수 버퍼)로 복사한다.
 	pd3dCommandList->SetGraphicsRoot32BitConstants(0, 16, &xmf4x4World, 0);
+	pd3dCommandList->SetGraphicsRoot32BitConstants(0, 4, &m_xmf4HitColor, 16);
+
 }
 
 void CGameObject::ReleaseShaderVariables()
@@ -182,6 +184,13 @@ void CGameObject::SetLook(XMFLOAT3 vLook)
 	m_xmf4x4World._32 = vLook.y;
 	m_xmf4x4World._33 = vLook.z;
 
+}
+
+void CGameObject::SetHit(bool bHit, XMFLOAT4 xmColor)
+{
+	m_bHit = bHit; 
+	m_xmf4HitColor = xmColor;
+	m_fHitTime = 0.f;
 }
 
 void CGameObject::SetMesh(int nIndex, CMesh* pMesh)
@@ -444,7 +453,17 @@ bool CEnemy::Animate(float fTimeElapsed)
 		}
 	
 	}
+	if (m_bHit)
+		m_fHitTime += fTimeElapsed;
+	// 충돌 변수 업데이트
+	if (m_fHitTime > 0.2f)
+	{
+		m_fHitTime = 0.f;
+		m_bHit = false;
+		m_xmf4HitColor = m_xmf4HitColor = { 0.f,0.f,0.f,0.f };
+	}
 
+	UpdateBoundingBox();
 	return OBJ_NONE;
 
 }

@@ -203,6 +203,16 @@ void CPlayer::Update(float fTimeElapsed)
 	if (fDeceleration > fLength) fDeceleration = fLength;
 	m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, Vector3::ScalarProduct(m_xmf3Velocity,
 		-fDeceleration, true));
+
+	if (m_bHit)
+		m_fHitTime += fTimeElapsed;
+	// 충돌 변수 업데이트
+	if (m_fHitTime > 0.2f)
+	{
+		m_fHitTime = 0.f;
+		m_bHit = false;
+		m_xmf4HitColor = { 0.f,0.f,0.f,0.f };
+	}
 	UpdateBoundingBox();
 
 }
@@ -405,13 +415,14 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	// 좌표가 지형의 높이보다 크고 중력이 작용하도록 플레이어를 설정하였으므로 플레이어는 점차적으로 하강하게 된다.
 		float fHeight = pTerrain->GetHeight(50, 150);
 	SetPosition(XMFLOAT3(50, fHeight, 150));
+
 	//플레이어의 위치가 변경될 때 지형의 정보에 따라 플레이어의 위치를 변경할 수 있도록 설정한다. 
 	SetPlayerUpdatedContext(pTerrain);
 	
 	//카메라의 위치가 변경될 때 지형의 정보에 따라 카메라의 위치를 변경할 수 있도록 설정한다. 
 	SetCameraUpdatedContext(pTerrain);
 	CCubeMeshDiffused* pCubeMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList,
-		4.0f, 12.0f, 4.0f);
+		8.0f, 12.0f, 8.0f);
 	SetMesh(0, pCubeMesh);//플레이어를 렌더링할 셰이더를 생성한다. 
 	CPlayerShader *pShader = new CPlayerShader();
 	pShader->CreateShader(pd3dDevice, pd3dGraphicsRootSignature);

@@ -93,6 +93,8 @@ public:
 	// 외부에서 객체 추가하는 함수
 	void AddObject(OBJ::OBJID _eID, CGameObject* pObject);
 
+	// 플레이어 총알 추가하는 함수
+	void AddPlayerBullet();
 	
 protected:
 	list<CGameObject*>						m_listObjects[OBJ::END_OBJID];
@@ -104,13 +106,14 @@ protected:
 
 protected:
 	// 메쉬를 미리 만들어 놓는다.
-	CCubeMeshDiffused*						m_pCubeMyTeamMesh;		// 아군 메쉬
-	CCubeMeshDiffused*						m_pCubeMySpotMesh;		// 아군 지점 메쉬
-	CCubeMeshDiffused*						m_pCubeEnemySpotMesh;	// 적군 지점 메쉬
-	CModelMeshDiffused*						m_pEnemyFlyerShipMesh;	// 적군 비행기 메쉬
-	CModelMeshDiffused*						m_pBaseMesh;			// 기지 메쉬
-	CCubeMeshDiffused*						m_pCubeEnemyMesh;		// 적군 메쉬
-	CCubeMeshDiffused*						m_pCubeEnemyBulletMesh;			// 적군 총알 메쉬
+	CCubeMeshDiffused*						m_pCubeMyTeamMesh;			// 아군 메쉬
+	CCubeMeshDiffused*						m_pCubeMySpotMesh;			// 아군 지점 메쉬
+	CCubeMeshDiffused*						m_pCubeEnemySpotMesh;		// 적군 지점 메쉬
+	CModelMeshDiffused*						m_pEnemyFlyerShipMesh;		// 적군 비행기 메쉬
+	CModelMeshDiffused*						m_pBaseMesh;				// 기지 메쉬
+	CCubeMeshDiffused*						m_pCubeEnemyMesh;			// 적군 메쉬
+	CCubeMeshDiffused*						m_pCubeEnemyBulletMesh;		// 적군 총알 메쉬
+	CCubeMeshDiffused*						m_pCubePlayerBulletMesh;	// 플레이어 총알 메쉬
 };
 
 class CTerrainShader : public CShader

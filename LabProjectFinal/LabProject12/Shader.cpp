@@ -236,8 +236,8 @@ void CObjectsShader::InitBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 	m_pEnemyFlyerShipMesh = new CModelMeshDiffused(pd3dDevice, pd3dCommandList, "Models/FlyerPlayership.txt", true); // 적군 우주선 메쉬
 	m_pBaseMesh = new CModelMeshDiffused(pd3dDevice, pd3dCommandList, "Models/ams_house3.bin", false); // 기지 메쉬
 	m_pCubeEnemyMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 8.f, 8.f, 8.f, OBJ::RED);
-	m_pCubeEnemyBulletMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 3.f, 3.f, 3.f, OBJ::YELLOW);
-
+	m_pCubeEnemyBulletMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 4.f, 4.f, 4.f, OBJ::YELLOW);
+	m_pCubePlayerBulletMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 4.f, 4.f, 4.f, OBJ::GREEN);
 
 	/* 아군 생성 지점 만드는 부분 */
 	// 아군 지점 20,fheight, 100에 설치
@@ -551,6 +551,36 @@ void CObjectsShader::Collision_Check()
 			break;
 		}
 	}
+
+	// 플레이어와 몬스터 총알
+	for (auto iter = m_listObjects[OBJ::MONSTER_BULLET].begin(); iter != m_listObjects[OBJ::MONSTER_BULLET].end();)
+	{
+		if ((*iter)->m_xmOOBB.Intersects(m_pPlayer->m_xmOOBB))
+		{
+			m_pPlayer->SetHit(true, XMFLOAT4(1.f, 0.f, 0.f, 0.f));
+			iter = m_listObjects[OBJ::MONSTER_BULLET].erase(iter);
+			cout << "총알 충돌" << endl;
+		}
+		else
+			++iter;
+	}
+
+	// 몬스터와 플레이어 총알
+	for (auto& enemy : m_listObjects[OBJ::ENEMY])
+	{
+		for (auto iterBullet = m_listObjects[OBJ::MY_BULLET].begin(); iterBullet != m_listObjects[OBJ::MY_BULLET].end();)
+		{
+			if ((*iterBullet)->m_xmOOBB.Intersects(enemy->m_xmOOBB))
+			{
+				cout << "몬스터 충돌" << endl;
+				enemy->SetHit(true, XMFLOAT4(0.f,1.f,0.f,0.f));
+				iterBullet = m_listObjects[OBJ::MY_BULLET].erase(iterBullet);
+			}
+			else
+				++iterBullet;
+		}
+	}
+
 }
 
 void CObjectsShader::AddObject(OBJ::OBJID _eID, CGameObject* pObject)
@@ -560,6 +590,21 @@ void CObjectsShader::AddObject(OBJ::OBJID _eID, CGameObject* pObject)
 		pObject->SetMesh(0, m_pCubeEnemyBulletMesh);
 	}
 	m_listObjects[_eID].push_back(pObject);
+}
+
+void CObjectsShader::AddPlayerBullet()
+{
+	// 플레이어의 Look 방향으로
+	XMFLOAT3 playerLook = m_pPlayer->GetLook();
+	XMFLOAT3 playerPos = m_pPlayer->GetPosition();
+
+	CBullet* pBullet = new CBullet(1);
+	pBullet->SetMesh(0, m_pCubePlayerBulletMesh);
+	pBullet->SetPosition(playerPos);
+	pBullet->SetDir(playerLook);
+	m_listObjects[OBJ::MY_BULLET].push_back(pBullet);
+	//cout << playerLook.x <<" "<< playerLook.y << " " <<playerLook.z << endl;
+
 }
 
 CTerrainShader::CTerrainShader()
@@ -574,7 +619,8 @@ D3D12_INPUT_LAYOUT_DESC CTerrainShader::CreateInputLayout()
 {
 	UINT nInputElementDescs = 2;
 	D3D12_INPUT_ELEMENT_DESC* pd3dInputElementDescs = new
-		D3D12_INPUT_ELEMENT_DESC[nInputElementDescs]; pd3dInputElementDescs[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
+		D3D12_INPUT_ELEMENT_DESC[nInputElementDescs]; 
+	pd3dInputElementDescs[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
 		D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
 	pd3dInputElementDescs[1] = { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12,
 	D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };

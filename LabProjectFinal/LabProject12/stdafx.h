@@ -59,7 +59,7 @@
 
 /*정점의 색상을 무작위로(Random) 설정하기 위해 사용한다. 각 정점의 색상은 난수(Random Number)를 생성하여 지정한다.*/
 #define RANDOM_COLOR XMFLOAT4(rand() / float(RAND_MAX), rand() / float(RAND_MAX), rand() / float(RAND_MAX), rand() / float(RAND_MAX))
-#define RANDOM_RED XMFLOAT4(1, rand() / float(RAND_MAX),1, 1)
+#define RANDOM_RED XMFLOAT4(1, rand() / float(RAND_MAX),rand() / float(RAND_MAX), 1)
 #define RANDOM_BLUE XMFLOAT4(rand() / float(RAND_MAX), rand() / float(RAND_MAX), 1, 1)
 #define RANDOM_GREEN XMFLOAT4(rand() / float(RAND_MAX), 1, rand() / float(RAND_MAX), 1)
 #define RANDOM_YELLOW XMFLOAT4(1, 1, rand() / float(RAND_MAX), 1)

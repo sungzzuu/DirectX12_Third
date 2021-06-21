@@ -2,6 +2,7 @@
 cbuffer cbGameObjectInfo : register(b0)
 {
 matrix gmtxWorld : packoffset(c0);
+float4 hitColor : packoffset(c4);
 };
 //카메라의 정보를 위한 상수 버퍼를 선언한다. 
 cbuffer cbCameraInfo : register(b1)
@@ -28,11 +29,14 @@ VS_OUTPUT VSDiffused(VS_INPUT input)
 	output.position = mul(mul(mul(float4(input.position, 1.0f), gmtxWorld), gmtxView), 
 	gmtxProjection);
 	output.color = input.color;
+	output.color.x += hitColor.x;
+	output.color.y += hitColor.y;
+	output.color.z += hitColor.z;
+
 	return(output);
 }
 //픽셀 셰이더를 정의한다. 
 float4 PSDiffused(VS_OUTPUT input) : SV_TARGET
 {
-	//input.color.x = 1;
 	return(input.color);
 }

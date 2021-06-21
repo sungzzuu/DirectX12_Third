@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "GameFramework.h"
 #include "Camera.h"
-
+#include "Shader.h"
 CGameFramework::CGameFramework()
 {
 	m_pdxgiFactory = NULL;
@@ -547,15 +547,18 @@ LRESULT CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT nMessageID, WP
 		break;
 	}
 	case WM_LBUTTONDOWN:
-	case WM_RBUTTONDOWN:
 		//마우스 캡쳐를 하고 현재 마우스 위치를 가져온다. 
 		::SetCapture(hWnd);
 		::GetCursorPos(&m_ptOldCursorPos);
 		break;
+	case WM_RBUTTONDOWN:
+		m_pScene->AddPlayerBullet();
+		break;
 	case WM_LBUTTONUP:
-	case WM_RBUTTONUP:
 		//마우스 캡쳐를 해제한다.
 		::ReleaseCapture();
+		break;
+	case WM_RBUTTONUP:
 		break;
 	case WM_MOUSEMOVE:
 		OnProcessingMouseMessage(hWnd, nMessageID, wParam, lParam);

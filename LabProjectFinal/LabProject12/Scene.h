@@ -28,6 +28,7 @@ public:
 	ID3D12RootSignature* GetGraphicsRootSignature();
 
 	CHeightMapTerrain* GetTerrain() { return(m_pTerrain); }
+	void AddPlayerBullet();
 	void SetPlayer(CPlayer* pPlayer) { m_pPlayer = pPlayer; }
 	void SetShaderPlayer(int index) { m_pShaders[index].SetPlayer(m_pPlayer); }
 	

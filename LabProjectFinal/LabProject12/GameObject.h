@@ -29,7 +29,9 @@ protected:
 
 public:
 	BoundingOrientedBox			m_xmOOBB;
-
+	XMFLOAT4					m_xmf4HitColor;
+	float						m_fHitTime = 0.f;
+	bool						m_bHit = false;
 public:
 	void ReleaseUploadBuffers(); 
 	virtual void SetMesh(int nIndex, CMesh* pMesh);
@@ -71,6 +73,9 @@ public:
 
 	// 쉐이더 설정
 	void SetObjectsShader(CObjectsShader* pShader) { m_pObjectsShader = pShader; }
+
+	// 피격 처리
+	void SetHit(bool bHit, XMFLOAT4 xmColor);
 };
 
 class CRotatingFlagObject : public CGameObject
