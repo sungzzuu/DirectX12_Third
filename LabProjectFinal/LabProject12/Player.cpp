@@ -403,8 +403,8 @@ CTerrainPlayer::CTerrainPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandLi
 	CHeightMapTerrain* pTerrain = (CHeightMapTerrain*)pContext;
 	//플레이어의 위치를 지형의 가운데(y-축 좌표는 지형의 높이보다 1500 높게)로 설정한다. 플레이어 위치 벡터의 y-
 	// 좌표가 지형의 높이보다 크고 중력이 작용하도록 플레이어를 설정하였으므로 플레이어는 점차적으로 하강하게 된다.
-		float fHeight = pTerrain->GetHeight(0,0);
-	SetPosition(XMFLOAT3(0, fHeight,0));
+		float fHeight = pTerrain->GetHeight(20, 250);
+	SetPosition(XMFLOAT3(20, fHeight, 250));
 
 	cout << pTerrain->GetWidth() << endl;
 	cout << pTerrain->GetLength() << endl;
@@ -462,7 +462,7 @@ CCamera* CTerrainPlayer::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 		SetMaxVelocityY(400.0f);
 		m_pCamera = OnChangeCamera(THIRD_PERSON_CAMERA, nCurrentCameraMode);
 		m_pCamera->SetTimeLag(0.25f);
-		m_pCamera->SetOffset(XMFLOAT3(0.0f, 60.0f, -80.0f));
+		m_pCamera->SetOffset(XMFLOAT3(0.0f,80.0f, -100.0f));
 		m_pCamera->GenerateProjectionMatrix(1.01f, 50000.0f, ASPECT_RATIO, 60.0f);
 	break; default:
 		break;

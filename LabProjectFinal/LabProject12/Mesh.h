@@ -79,12 +79,12 @@ public:
 
 };
 
-class CFlyerShipMeshDiffused : public CMesh
+class CModelMeshDiffused : public CMesh
 {
 public:
-	CFlyerShipMeshDiffused(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList
+	CModelMeshDiffused(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList
 		* pd3dCommandList, char* pstrFileName, bool bTextFile);
-	virtual ~CFlyerShipMeshDiffused();
+	virtual ~CModelMeshDiffused();
 public:
 	void LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 		char* pstrFileName, bool bTextFile);

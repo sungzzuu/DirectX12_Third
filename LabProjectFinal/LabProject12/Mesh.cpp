@@ -577,17 +577,17 @@ XMFLOAT4 CHeightMapGridMesh::OnGetColor(int x, int z, void* pContext)
 	return(xmf4Color);
 }
 
-CFlyerShipMeshDiffused::CFlyerShipMeshDiffused(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, char* pstrFileName, bool bTextFile)
+CModelMeshDiffused::CModelMeshDiffused(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, char* pstrFileName, bool bTextFile)
 	: CMesh(pd3dDevice, pd3dCommandList)
 {
 	LoadMeshFromFile(pd3dDevice, pd3dCommandList, pstrFileName, bTextFile);
 }
 
-CFlyerShipMeshDiffused::~CFlyerShipMeshDiffused()
+CModelMeshDiffused::~CModelMeshDiffused()
 {
 }
 
-void CFlyerShipMeshDiffused::LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, char* pstrFileName, bool bTextFile)
+void CModelMeshDiffused::LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, char* pstrFileName, bool bTextFile)
 {
 	char pstrToken[64] = { '\0' };
 

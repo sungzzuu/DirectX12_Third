@@ -75,14 +75,20 @@ private:
 	float		m_fRotationSpeed;
 	STATE		m_eState;
 	float		m_fOriginY;
+	bool		m_bMyTeam;
 public:
 	void SetRotationSpeed(float fRotationSpeed) { m_fRotationSpeed = fRotationSpeed; }
 	void SetRotationAxis(XMFLOAT3 xmf3RotationAxis) {m_xmf3RotationAxis = xmf3RotationAxis;}
 	virtual void Animate(float fTimeElapsed);
 	STATE GetState() { return m_eState; }
 	void SetState(STATE _eState);
+	void SetMyTeam(bool bMyTeam) { m_bMyTeam = bMyTeam; }
+	bool GetMyTeam() { return m_bMyTeam; }
 };
 
+// 날아오는 비행기
+// 타겟 정해주기
+// DIR 정해주기
 
 
 class CHeightMapTerrain : public CGameObject

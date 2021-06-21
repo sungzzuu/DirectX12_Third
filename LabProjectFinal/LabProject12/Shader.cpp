@@ -233,7 +233,8 @@ void CObjectsShader::InitBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 	m_pCubeMySpotMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 6.0f, 20.0f, 6.0f, OBJ::BLUE); // 아군 스팟 메쉬
 	m_pCubeEnemySpotMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 6.0f, 20.0f, 6.0f, OBJ::RED); // 적군 스팟 메쉬
 
-	m_pEnemyFlyerShipMesh = new CFlyerShipMeshDiffused(pd3dDevice, pd3dCommandList, "Models/FlyerPlayership.txt", true);
+	m_pEnemyFlyerShipMesh = new CModelMeshDiffused(pd3dDevice, pd3dCommandList, "Models/FlyerPlayership.txt", true);
+	m_pBaseMesh = new CModelMeshDiffused(pd3dDevice, pd3dCommandList, "Models/ams_house3.bin", false);
 
 
 	/* 아군 생성 지점 만드는 부분 */
@@ -253,6 +254,8 @@ void CObjectsShader::InitBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 		pFlagObject->SetMesh(0, m_pCubeMySpotMesh);
 		pFlagObject->SetPosition(pos[i].x, m_pTerrain->GetHeight(pos[i].x, pos[i].z) + 10.f, pos[i].z);
 		pFlagObject->SetState(CRotatingFlagObject::NORMAL);
+		pFlagObject->SetMyTeam(true);
+
 		xmf3SurfaceNormal = m_pTerrain->GetNormal(pos[i].x, pos[i].z);
 		xmf3RotateAxis = Vector3::CrossProduct(XMFLOAT3(0.0f, 1.0f, 0.0f),
 			xmf3SurfaceNormal);
@@ -283,6 +286,7 @@ void CObjectsShader::InitBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 		pFlagObject->SetMesh(0, m_pCubeEnemySpotMesh);
 		pFlagObject->SetPosition(pos[i].x, m_pTerrain->GetHeight(pos[i].x, pos[i].z) + 10.f, pos[i].z);
 		pFlagObject->SetState(CRotatingFlagObject::NORMAL);
+		pFlagObject->SetMyTeam(false);
 		xmf3SurfaceNormal = m_pTerrain->GetNormal(pos[i].x, pos[i].z);
 		xmf3RotateAxis = Vector3::CrossProduct(XMFLOAT3(0.0f, 1.0f, 0.0f),
 			xmf3SurfaceNormal);
@@ -297,6 +301,20 @@ void CObjectsShader::InitBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 		m_listObjects[OBJ::FLAG].push_back(pFlagObject);
 	}
 	//=========================================================================================================
+	/* 아군, 적군 기지 생성 */
+	CGameObject* pMyBase = new CGameObject(1);
+	pMyBase->SetMesh(0, m_pBaseMesh);
+	pMyBase->SetPosition(70, m_pTerrain->GetHeight(70, 70)-20.f, 70);
+	pMyBase->SetScale(XMFLOAT3(30.f, 10.f, 30.f));
+	m_listObjects[OBJ::BASE].push_back(pMyBase);
+
+	CGameObject* pEnemyBase = new CGameObject(1);
+	pEnemyBase->SetMesh(0, m_pBaseMesh);
+	pEnemyBase->Rotate(0.f, 180.f, 0.f);
+	pEnemyBase->SetScale(XMFLOAT3(30.f, 10.f, 30.f));
+	pEnemyBase->SetPosition(1900, m_pTerrain->GetHeight(1900, 1900) - 20.f, 1900);
+	m_listObjects[OBJ::BASE].push_back(pEnemyBase);
+
 
 	//// 비행기 테스트 출력
 	//XMFLOAT3 xmf3RotateAxis, xmf3SurfaceNormal;
@@ -467,6 +485,16 @@ void CObjectsShader::BuildMyTeam()
 	
 }
 
+void CObjectsShader::BuildEnemy(XMFLOAT3 spotPos)
+{
+	// 비행기 먼저 만들고 -> 비행기 x,z 로부터 z 플러스 방향에서 100 떨어진곳에 생성
+
+	
+	// 비행기가 플래그의 x,z에 도달하면
+	// 비행기에서 적군 내려오게하기 -> 지형 태우기 : 플레이어 서서히 떨어지게 하는 부분 보고 하기
+
+}
+
 void CObjectsShader::Collision_Check()
 {
 	// 플레이어와 플래그
@@ -478,7 +506,11 @@ void CObjectsShader::Collision_Check()
 		{
 			dynamic_cast<CRotatingFlagObject*>(flag)->SetState(CRotatingFlagObject::END);
 
-			BuildMyTeam();
+			// 적팀인지 아닌지 확인
+			if (dynamic_cast<CRotatingFlagObject*>(flag)->GetMyTeam())
+				BuildMyTeam();
+			else
+				BuildEnemy(flag->GetPosition());
 		}
 
 		if (flag->m_xmOOBB.Intersects(m_pPlayer->m_xmOOBB))
