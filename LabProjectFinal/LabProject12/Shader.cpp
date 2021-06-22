@@ -218,11 +218,11 @@ void CPlayerShader::CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* 
 
 CObjectsShader::CObjectsShader()
 {
-	::ZeroMemory(&m_bMyTeamCheck, sizeof(m_bMyTeamCheck));
 }
 
 CObjectsShader::~CObjectsShader()
 {
+	ReleaseObjects();
 }
 
 void CObjectsShader::InitBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
@@ -240,6 +240,7 @@ void CObjectsShader::InitBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 	m_pCubeEnemyBulletMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 4.f, 4.f, 4.f, OBJ::YELLOW);
 	m_pCubePlayerBulletMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 4.f, 4.f, 4.f, OBJ::GREEN);
 	m_pCubeWaterMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList,1500.f, 50.f, 1500.f, OBJ::BLUE);
+	m_pMyTeamFlyerShipMesh = new CModelMeshDiffused(pd3dDevice, pd3dCommandList, "Models/FlyerPlayership.txt", true);
 
 	/* 아군 생성 지점 만드는 부분 */
 	// 아군 지점 20,fheight, 100에 설치
@@ -368,6 +369,7 @@ void CObjectsShader::AnimateObjects(float fTimeElapsed)
 
 			if ((*iter)->Animate(fTimeElapsed) == OBJ_DEAD)
 			{
+				SAFE_DELETE(*iter);
 				iter = m_listObjects[i].erase(iter);
 				cout << "객체 삭제" << endl;
 			}
@@ -385,7 +387,8 @@ void CObjectsShader::ReleaseObjects()
 	{
 		for (auto& object : m_listObjects[i])
 		{
-			delete object;
+			SAFE_DELETE(object);
+
 		}
 		m_listObjects[i].clear();
 
@@ -462,6 +465,42 @@ void CObjectsShader::BuildMyTeam()
 	// 순서별로 생성 오프셋 다르게 해야함....
 	XMFLOAT3 xmf3RotateAxis, xmf3SurfaceNormal;
 	CMyTeamObject* pTerrainObject = NULL;
+	if (m_iMyTeamBuildNum == 0)
+	{
+		// 비행기 생성
+		XMFLOAT3 offset = { -50.f, 0.f, -10.f };
+		CMyTeamShip* pMyTeamShip = new CMyTeamShip(m_pTerrain, m_pPlayer, offset, 10.f);
+		pMyTeamShip->SetMesh(0, m_pMyTeamFlyerShipMesh);
+		pMyTeamShip->SetScale(XMFLOAT3(4.f, 4.f, 4.f));
+		pMyTeamShip->Rotate(-20.f, 0.f, 0.f);
+		XMFLOAT3 pos = {
+			m_pPlayer->GetPosition().x + offset.x,
+			m_pPlayer->GetPosition().y + offset.y,
+			m_pPlayer->GetPosition().z + offset.z };
+
+		pMyTeamShip->SetPosition(XMFLOAT3(pos.x, m_pTerrain->GetHeight(pos.x, pos.z) + 10.f, pos.z));
+		pMyTeamShip->SetObjectsShader(this);
+		m_listObjects[OBJ::MYTEAM].push_back(pMyTeamShip);
+		m_myTeamShip[0] = pMyTeamShip;
+
+		offset = { 50.f, 0.f, -10.f };
+		pMyTeamShip = new CMyTeamShip(m_pTerrain, m_pPlayer, offset, 10.f);
+		pMyTeamShip->SetMesh(0, m_pMyTeamFlyerShipMesh);
+		pMyTeamShip->SetScale(XMFLOAT3(4.f, 4.f, 4.f));
+		pMyTeamShip->Rotate(-20.f,0.f, 0.f);
+
+
+		pos = {
+			m_pPlayer->GetPosition().x + offset.x,
+			m_pPlayer->GetPosition().y + offset.y,
+			m_pPlayer->GetPosition().z + offset.z };
+
+		pMyTeamShip->SetPosition(XMFLOAT3(pos.x, m_pTerrain->GetHeight(pos.x, pos.z) + 10.f, pos.z));
+		pMyTeamShip->SetObjectsShader(this);
+		m_listObjects[OBJ::MYTEAM].push_back(pMyTeamShip);
+		m_myTeamShip[1] = pMyTeamShip;
+
+	}
 	for (int i = 0; i < 5; ++i)
 	{
 		XMFLOAT3 offset = { -20.f + i * 10.f,0.f, -10.f + m_iMyTeamBuildNum*(-10.f) };
@@ -519,16 +558,63 @@ void CObjectsShader::BuildEnemyFlyShip(XMFLOAT3 spotPos)
 
 void CObjectsShader::BuildEnemy(XMFLOAT3 spotPos)
 {
-	// 5마리 생성
-	for (int i = 0; i < 5; ++i)
+	switch (n_iEnemyBuildNum)
 	{
-		CEnemy* pEnemy = new CEnemy(m_pTerrain, 4.f, 1);
-		pEnemy->SetMesh(0, m_pCubeEnemyMesh);
-		pEnemy->SetScale(XMFLOAT3(0.1f, 0.1f, 0.1f));
-		pEnemy->SetPosition(spotPos.x - 10.f + i * 20.f, spotPos.y, spotPos.z);
-		pEnemy->SetObjectsShader(this);
-		m_listObjects[OBJ::ENEMY].push_back(pEnemy);
+	case 0:
+		// 5마리 생성
+		for (int i = 0; i < 5; ++i)
+		{
+			CEnemy* pEnemy = new CEnemy(m_pTerrain, 4.f, 1);
+			pEnemy->SetMesh(0, m_pCubeEnemyMesh);
+			pEnemy->SetScale(XMFLOAT3(0.1f, 0.1f, 0.1f));
+			pEnemy->SetPosition(spotPos.x - 10.f + i * 20.f, spotPos.y, spotPos.z);
+			pEnemy->SetObjectsShader(this);
+			m_listObjects[OBJ::ENEMY].push_back(pEnemy);
+		}
+		break;
+	case 1:
+		for (int i = 0; i < 5; ++i)
+		{
+			// 따라오는 몬스터 
+			CFollowingEnemy* pEnemy = new CFollowingEnemy(m_pTerrain, 4.f, m_pPlayer, 1);
+			pEnemy->SetMesh(0, m_pCubeEnemyMesh);
+			pEnemy->SetScale(XMFLOAT3(0.1f, 0.1f, 0.1f));
+			pEnemy->SetPosition(spotPos.x - 60.f + i*30.f, spotPos.y, spotPos.z);
+			pEnemy->SetObjectsShader(this);
+			pEnemy->SetSpeed(20.f + 10.f * i);
+			m_listObjects[OBJ::ENEMY].push_back(pEnemy);
+		}
+		break;
+	case 2:
+		// 15마리 생성
+		for (int i = 0; i < 5; ++i)
+		{
+			for (int j = 0; j < 3; ++j)
+			{
+				CEnemy* pEnemy = new CEnemy(m_pTerrain, 4.f, 1);
+				pEnemy->SetMesh(0, m_pCubeEnemyMesh);
+				pEnemy->SetScale(XMFLOAT3(0.1f, 0.1f, 0.1f));
+				pEnemy->SetPosition(spotPos.x - 10.f + i * 20.f, spotPos.y, spotPos.z + j * 20.f);
+				pEnemy->SetObjectsShader(this);
+				m_listObjects[OBJ::ENEMY].push_back(pEnemy);
+			}
+
+		}
+		break;
+	case 3:
+		// 지상 몬스터 5마리
+		// 		m_myTeamShip의 타겟을 설정해준다.
+		// 한번 공격하면 타겟을 바꿔준다.
+
+		break;
+	case 4:
+		// UFO 보스몹
+		break;
+	default:
+		break;
 	}
+	
+	n_iEnemyBuildNum++;
 
 }
 

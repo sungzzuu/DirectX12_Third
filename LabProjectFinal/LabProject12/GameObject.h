@@ -202,14 +202,28 @@ public:
 
 public:
 	virtual bool	Animate(float fTimeElapsed);
-private:
+protected:
 	STATE		m_eState;
 	float		m_fRotationSpeed;
 	float		m_fDownSpeed;
 	float		m_fScale;
 	float		m_fBulletCreateTime;
 };
+// 따라오는 적 오브젝트
+class CFollowingEnemy : public CEnemy
+{
+public:
+	CFollowingEnemy(void* pContext, float fMeshHeightHalf, CPlayer* pPlayer, int nMeshes = 1);
+	virtual ~CFollowingEnemy();
+public:
+	virtual bool	Animate(float fTimeElapsed);
+	void SetPlayer(CPlayer* pPlayer) { m_pPlayer = pPlayer; }
+	void SetSpeed(float fSpeed) { m_fSpeed = fSpeed; }
+private:
+	float				m_fSpeed;
+	CPlayer*			m_pPlayer;
 
+};
 // 아군 오브젝트
 class CMyTeamObject : public CTerrainObject
 {
@@ -219,9 +233,24 @@ public:
 	void SetPlayer(CPlayer* pPlayer) { m_pPlayer = pPlayer; }
 	virtual bool Animate(float fTimeElapsed);
 
-private:
+protected:
 	CPlayer*						m_pPlayer;
 	XMFLOAT3						m_xmf3Offset;
+	float							m_fBulletCreateTime;
+};
+
+// 아군 지상 공격 오브젝트 죽지 않음
+// 타겟 으로 총알 발사
+// 지상 공격만 함
+class CMyTeamShip : public CMyTeamObject
+{
+public:
+	CMyTeamShip(void* pContext, void* pPlayer, XMFLOAT3 xmf3Offset, float fMeshHeightHalf, int nMeshes = 1);
+	virtual ~CMyTeamShip();
+	virtual bool Animate(float fTimeElapsed);
+
+private:
+	CGameObject*					pTarget;
 	float							m_fBulletCreateTime;
 };
 
@@ -233,6 +262,7 @@ public:
 	CBullet(int nMeshes=1);
 	virtual ~CBullet();
 	virtual bool Animate(float fTimeElapsed);
+	void SetSpeed(float fSpeed) { m_fSpeed = fSpeed; }
 
 private:
 	float			m_fSpeed;

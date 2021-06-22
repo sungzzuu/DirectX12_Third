@@ -527,6 +527,9 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 			if (m_pPlayer) m_pCamera = m_pPlayer->ChangeCamera((wParam - VK_F1 + 1),
 				m_GameTimer.GetTimeElapsed());
 			break;
+		case VK_SHIFT:
+			// 플레이어 공격
+			break;
 		default:
 			break;
 		}
@@ -557,6 +560,8 @@ LRESULT CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT nMessageID, WP
 	case WM_LBUTTONUP:
 		//마우스 캡쳐를 해제한다.
 		::ReleaseCapture();
+		cout << "휠!" << endl;
+
 		break;
 	case WM_RBUTTONUP:
 		break;

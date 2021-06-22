@@ -107,7 +107,8 @@ protected:
 	int										m_iMyTeamBuildNum=0;
 	XMFLOAT3								m_xmf3EnemyBasePos;
 	XMFLOAT3								m_xmf3MyBasePos;
-
+	int										n_iEnemyBuildNum = 0;
+	CMyTeamShip* m_myTeamShip[2];
 protected:
 	// 메쉬를 미리 만들어 놓는다.
 	CCubeMeshDiffused*						m_pCubeMyTeamMesh;			// 아군 메쉬
@@ -119,6 +120,7 @@ protected:
 	CCubeMeshDiffused*						m_pCubeEnemyBulletMesh;		// 적군 총알 메쉬
 	CCubeMeshDiffused*						m_pCubePlayerBulletMesh;	// 플레이어 총알 메쉬
 	CCubeMeshDiffused*						m_pCubeWaterMesh;			// 플레이어 총알 메쉬
+	CModelMeshDiffused*						m_pMyTeamFlyerShipMesh;		// 플레이어 비행기 메쉬
 
 };
 

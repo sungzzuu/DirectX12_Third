@@ -524,7 +524,8 @@ CTerrainObject::~CTerrainObject()
 void CTerrainObject::OnObjectUpdateCallback(float fTimeElapsed)
 {
 	XMFLOAT3 xmf3PlayerPosition = GetPosition();
-	float fHeight = m_pTerrain->GetHeight(xmf3PlayerPosition.x, xmf3PlayerPosition.z) + 6.0f;
+	float fHeight = m_pTerrain->GetHeight(xmf3PlayerPosition.x, xmf3PlayerPosition.z) + m_fMeshHeightHalf;
+	SetPosition(xmf3PlayerPosition.x, fHeight, xmf3PlayerPosition.z);
 }
 
 CBullet::CBullet(int nMeshes)
@@ -548,5 +549,89 @@ bool CBullet::Animate(float fTimeElapsed)
 	m_fCreateTime += fTimeElapsed;
 	if(m_fCreateTime > 10.f)
 		return OBJ_DEAD;
+	return OBJ_NONE;
+}
+
+CMyTeamShip::CMyTeamShip(void* pContext, void* pPlayer, XMFLOAT3 xmf3Offset, float fMeshHeightHalf, int nMeshes)
+	:CMyTeamObject(pContext, pPlayer, xmf3Offset, fMeshHeightHalf, nMeshes)
+{
+	pTarget = nullptr;
+	m_fBulletCreateTime = 0.f;
+}
+
+CMyTeamShip::~CMyTeamShip()
+{
+}
+
+bool CMyTeamShip::Animate(float fTimeElapsed)
+{
+	// 플레이어와 오프셋을 유지하며 쫓아가기
+	XMFLOAT3 playerPos = m_pPlayer->GetPosition();
+	XMFLOAT3 newPos = { playerPos.x + m_xmf3Offset.x, playerPos.y, playerPos.z + m_xmf3Offset.z };
+	SetPosition(newPos.x, m_pTerrain->GetHeight(newPos.x, newPos.z) + m_fMeshHeightHalf, newPos.z);
+	OnObjectUpdateCallback(fTimeElapsed);
+
+	if (pTarget)
+	{
+		m_fBulletCreateTime += fTimeElapsed;
+		if (m_fBulletCreateTime > 3.f)
+		{
+			// 총알 발사
+			// 타겟 방향으로
+			// 노멀이면 총알 생성!!!
+			CBullet* pBullet = new CBullet(1);
+			pBullet->SetPosition(GetPosition());
+			XMFLOAT3 targetPos = pTarget->GetPosition();
+			XMFLOAT3 vDir = Vector3::Normalize(Vector3::Subtract(targetPos, GetPosition()));
+			pBullet->SetDir(vDir);
+			pBullet->SetSpeed(120.f);
+			m_pObjectsShader->AddObject(OBJ::MY_BULLET, pBullet);
+
+			m_fBulletCreateTime = float(rand() % 5) * 0.5f;
+		}
+	}
+	return false;
+}
+
+CFollowingEnemy::CFollowingEnemy(void* pContext, float fMeshHeightHalf, CPlayer* pPlayer, int nMeshes)
+	:CEnemy(pContext, fMeshHeightHalf, nMeshes)
+{
+	SetPlayer(pPlayer);
+	m_fSpeed = 30.f;
+}
+
+CFollowingEnemy::~CFollowingEnemy()
+{
+}
+
+bool CFollowingEnemy::Animate(float fTimeElapsed)
+{
+	STATE eState= m_eState;
+	CEnemy::Animate(fTimeElapsed);
+	if (eState != m_eState)
+	{
+		SetScale(XMFLOAT3(1.5f, 1.5f, 1.5f));
+		m_fMeshHeightHalf *= 1.5f;
+	}
+	if (m_eState == CEnemy::NORMAL)
+	{
+		// 플레이어 따라오도록 구현 
+		XMFLOAT3 playerPos = m_pPlayer->GetPosition();
+		XMFLOAT3 vDir = Vector3::Normalize(Vector3::Subtract(playerPos, GetPosition()));
+
+		// 플레이어 바라보도록
+		//float fAngle = Vector3::Angle(vDir, GetLook());
+		//Rotate(0.f, fAngle, 0.f);
+		m_xmf3MoveDir = vDir;
+		MoveByDir(m_fSpeed * fTimeElapsed);
+
+		OnObjectUpdateCallback(fTimeElapsed);
+		UpdateBoundingBox();
+	}
+	
+
+	if (m_iHp < 0)
+		return OBJ_DEAD;
+
 	return OBJ_NONE;
 }

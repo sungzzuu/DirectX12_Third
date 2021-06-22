@@ -41,8 +41,7 @@ private:
 	int m_nReferences = 0;
 public:
 	void AddRef() { m_nReferences++; }
-	void Release() { if (--m_nReferences <= 0) { 
-		delete this;  } }
+	void Release() {  }
 	void ReleaseUploadBuffers();
 protected:
 	ID3D12Resource* m_pd3dVertexBuffer = NULL;
