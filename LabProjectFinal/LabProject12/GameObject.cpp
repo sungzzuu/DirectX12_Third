@@ -330,7 +330,8 @@ CMyTeamObject::CMyTeamObject(void* pContext, void* pPlayer, XMFLOAT3 xmf3Offset,
 
 	// 오프셋 저장하기
 	m_xmf3Offset = xmf3Offset;
-	
+	m_fBulletCreateTime = 5.f;
+
 
 }
 
@@ -344,7 +345,37 @@ bool CMyTeamObject::Animate(float fTimeElapsed)
 	XMFLOAT3 newPos = { playerPos.x + m_xmf3Offset.x, playerPos.y, playerPos.z + m_xmf3Offset.z };
 	SetPosition(newPos.x, m_pTerrain->GetHeight(newPos.x, newPos.z) + m_fMeshHeightHalf, newPos.z);
 	OnObjectUpdateCallback(fTimeElapsed);
+
+	// 현재 몬스터가 있다면 일정 시간 마다 총알 발사
+		// 플레이어의 Look 방향으로 아군 팀들 총알 발사
+	m_fBulletCreateTime += fTimeElapsed;
+
+	if (m_fBulletCreateTime > 5.f && m_pObjectsShader->Get_listSize(OBJ::ENEMY))
+	{
+		XMFLOAT3 playerLook = m_pPlayer->GetLook();
+		CBullet* pBulletTeam = new CBullet(1);
+		pBulletTeam->SetPosition(GetPosition());
+		pBulletTeam->SetDir(playerLook);
+		pBulletTeam->SetScale(XMFLOAT3(0.5f, 0.5f, 0.5f));
+		m_pObjectsShader->AddObject(OBJ::MY_BULLET, pBulletTeam);
+		m_fBulletCreateTime = float(rand() % 5) * 0.5f;
+
+	}
+	
+	if (m_bHit)
+		m_fHitTime += fTimeElapsed;
+	// 충돌 변수 업데이트
+	if (m_fHitTime > 0.2f)
+	{
+		m_fHitTime = 0.f;
+		m_bHit = false;
+		m_xmf4HitColor = m_xmf4HitColor = { 0.f,0.f,0.f,0.f };
+	}
+
 	UpdateBoundingBox();
+
+	if (m_iHp < 0)
+		return OBJ_DEAD;
 	return OBJ_NONE;
 
 }

@@ -222,7 +222,9 @@ public:
 private:
 	CPlayer*						m_pPlayer;
 	XMFLOAT3						m_xmf3Offset;
+	float							m_fBulletCreateTime;
 };
+
 
 // Dir로 이동하는 총알
 class CBullet : public CGameObject

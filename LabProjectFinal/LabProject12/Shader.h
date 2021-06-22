@@ -95,6 +95,10 @@ public:
 
 	// 플레이어 총알 추가하는 함수
 	void AddPlayerBullet();
+
+	// 리스트에 오브젝트가 몇개인지 확인 
+	int Get_listSize(OBJ::OBJID _eID) { return m_listObjects[_eID].size(); }
+
 	
 protected:
 	list<CGameObject*>						m_listObjects[OBJ::END_OBJID];

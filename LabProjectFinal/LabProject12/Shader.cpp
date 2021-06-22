@@ -218,6 +218,7 @@ void CPlayerShader::CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* 
 
 CObjectsShader::CObjectsShader()
 {
+	::ZeroMemory(&m_bMyTeamCheck, sizeof(m_bMyTeamCheck));
 }
 
 CObjectsShader::~CObjectsShader()
@@ -474,6 +475,8 @@ void CObjectsShader::BuildMyTeam()
 			m_pPlayer->GetPosition().z + offset.z };
 
 		pTerrainObject->SetPosition(XMFLOAT3(pos.x, m_pTerrain->GetHeight(pos.x, pos.z) + 3.f, pos.z));
+		pTerrainObject->SetObjectsShader(this);
+
 		m_listObjects[OBJ::MYTEAM].push_back(pTerrainObject);
 	}
 	m_iMyTeamBuildNum++;
@@ -571,7 +574,21 @@ void CObjectsShader::Collision_Check()
 		else
 			++iter;
 	}
-
+	// 마이팀과 몬스터 총알
+	for (auto& myTeam : m_listObjects[OBJ::MYTEAM])
+	{
+		for (auto iterBullet = m_listObjects[OBJ::MONSTER_BULLET].begin(); iterBullet != m_listObjects[OBJ::MONSTER_BULLET].end();)
+		{
+			if ((*iterBullet)->m_xmOOBB.Intersects(myTeam->m_xmOOBB))
+			{
+				cout << "마이팀 충돌" << endl;
+				myTeam->SetHit(true, XMFLOAT4(1.f, 0.f, 0.f, 0.f));
+				iterBullet = m_listObjects[OBJ::MONSTER_BULLET].erase(iterBullet);
+			}
+			else
+				++iterBullet;
+		}
+	}
 	// 몬스터와 플레이어 총알
 	for (auto& enemy : m_listObjects[OBJ::ENEMY])
 	{
@@ -596,6 +613,11 @@ void CObjectsShader::AddObject(OBJ::OBJID _eID, CGameObject* pObject)
 	{
 		pObject->SetMesh(0, m_pCubeEnemyBulletMesh);
 	}
+	else if (_eID == OBJ::MY_BULLET)
+	{
+		pObject->SetMesh(0, m_pCubePlayerBulletMesh);
+
+	}
 	m_listObjects[_eID].push_back(pObject);
 }
 
@@ -611,7 +633,6 @@ void CObjectsShader::AddPlayerBullet()
 	pBullet->SetDir(playerLook);
 	m_listObjects[OBJ::MY_BULLET].push_back(pBullet);
 	//cout << playerLook.x <<" "<< playerLook.y << " " <<playerLook.z << endl;
-
 }
 
 CTerrainShader::CTerrainShader()
