@@ -32,6 +32,11 @@ void CScene::AddPlayerBullet()
 	m_pShaders[0].AddPlayerBullet();
 }
 
+void CScene::Cheat()
+{
+	m_pShaders[0].Cheat();
+}
+
 ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevice)
 {
 	ID3D12RootSignature* pd3dGraphicsRootSignature = NULL;

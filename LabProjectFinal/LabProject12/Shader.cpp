@@ -231,8 +231,8 @@ void CObjectsShader::InitBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 	SetTerrain((CHeightMapTerrain*)pContext);
 	/* 사용할 메쉬 미리 만들어 놓는 부분*/
 	m_pCubeMyTeamMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 6.f, 6.f, 6.f, OBJ::BLUE); // 아군 메쉬
-	m_pCubeMySpotMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 6.0f, 20.0f, 6.0f, OBJ::BLUE); // 아군 스팟 메쉬
-	m_pCubeEnemySpotMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 6.0f, 20.0f, 6.0f, OBJ::RED); // 적군 스팟 메쉬
+	m_pCubeMySpotMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 30.f, 50.f, 30.f, OBJ::BLUE); // 아군 스팟 메쉬
+	m_pCubeEnemySpotMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 30.f, 50.f, 30.f, OBJ::RED); // 적군 스팟 메쉬
 
 	m_pEnemyFlyerShipMesh = new CModelMeshDiffused(pd3dDevice, pd3dCommandList, "Models/FlyerPlayership.txt", true); // 적군 우주선 메쉬
 	m_pBaseMesh = new CModelMeshDiffused(pd3dDevice, pd3dCommandList, "Models/ams_house3.bin", false); // 기지 메쉬
@@ -241,15 +241,15 @@ void CObjectsShader::InitBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 	m_pCubePlayerBulletMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 4.f, 4.f, 4.f, OBJ::GREEN);
 	m_pCubeWaterMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList,1500.f, 50.f, 1500.f, OBJ::BLUE);
 	m_pMyTeamFlyerShipMesh = new CModelMeshDiffused(pd3dDevice, pd3dCommandList, "Models/FlyerPlayership.txt", true);
-
+	m_pEnemyUFOMesh = new CModelMeshDiffused(pd3dDevice, pd3dCommandList, "Models/UFO.bin", false);
 	/* 아군 생성 지점 만드는 부분 */
 	// 아군 지점 20,fheight, 100에 설치
 	XMFLOAT3 pos[5];
-	pos[0] = { 20, 0, 300 };
+	pos[0] = { 50, 0, 300 };
 	pos[1] = { 500, 0, 100 };
 	pos[2] = { 1000, 0, 500 };
 	pos[3] = { 1500, 0, 600 };
-	pos[4] = { 2000, 0, 200 };
+	pos[4] = { 1800, 0, 200 };
 
 	for(int i = 0; i < 5; ++i)
 	{
@@ -257,7 +257,7 @@ void CObjectsShader::InitBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 		CRotatingFlagObject* pFlagObject = NULL;
 		pFlagObject = new CRotatingFlagObject(1);
 		pFlagObject->SetMesh(0, m_pCubeMySpotMesh);
-		pFlagObject->SetPosition(pos[i].x, m_pTerrain->GetHeight(pos[i].x, pos[i].z) + 10.f, pos[i].z);
+		pFlagObject->SetPosition(pos[i].x, m_pTerrain->GetHeight(pos[i].x, pos[i].z) + 25.f, pos[i].z);
 		pFlagObject->SetState(CRotatingFlagObject::NORMAL);
 		pFlagObject->SetMyTeam(true);
 
@@ -277,19 +277,18 @@ void CObjectsShader::InitBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 	//=========================================================================================================
 
 	/* 적군 지점 생성*/
-	pos[0] = { 100, 0, 500 };
-	pos[1] = { 500, 0, 700 };
-	pos[2] = { 1000, 0, 800 };
-	pos[3] = { 800, 0, 1300 };
-	pos[4] = { 1500, 0, 1800 };
+	pos[0] = { 100, 0, 700 };
+	pos[1] = { 1100, 0, 1300 };
+	pos[2] = { 1000, 0, 1700 };
+	pos[3] = { 1600, 0, 1600 };
 
-	for(int i = 0; i < 5; ++i)
+	for(int i = 0; i < 4; ++i)
 	{
 		XMFLOAT3 xmf3RotateAxis, xmf3SurfaceNormal;
 		CRotatingFlagObject* pFlagObject = NULL;
 		pFlagObject = new CRotatingFlagObject(1);
 		pFlagObject->SetMesh(0, m_pCubeEnemySpotMesh);
-		pFlagObject->SetPosition(pos[i].x, m_pTerrain->GetHeight(pos[i].x, pos[i].z) + 10.f, pos[i].z);
+		pFlagObject->SetPosition(pos[i].x, m_pTerrain->GetHeight(pos[i].x, pos[i].z) +25.f, pos[i].z);
 		pFlagObject->SetState(CRotatingFlagObject::NORMAL);
 		pFlagObject->SetMyTeam(false);
 		xmf3SurfaceNormal = m_pTerrain->GetNormal(pos[i].x, pos[i].z);
@@ -318,7 +317,7 @@ void CObjectsShader::InitBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 	pEnemyBase->SetMesh(0, m_pBaseMesh);
 	pEnemyBase->Rotate(0.f, 180.f, 0.f);
 	pEnemyBase->SetScale(XMFLOAT3(30.f, 10.f, 30.f));
-	pEnemyBase->SetPosition(1900, m_pTerrain->GetHeight(1900, 1900) - 20.f, 1900);
+	pEnemyBase->SetPosition(1900, m_pTerrain->GetHeight(1900, 1700) - 20.f, 1700);
 	m_xmf3EnemyBasePos = pEnemyBase->GetPosition();
 
 	m_listObjects[OBJ::BASE].push_back(pEnemyBase);
@@ -378,7 +377,7 @@ void CObjectsShader::AnimateObjects(float fTimeElapsed)
 		}
 	}
 	Collision_Check();
-
+	CheckEnding(fTimeElapsed);
 }
 
 void CObjectsShader::ReleaseObjects()
@@ -602,13 +601,20 @@ void CObjectsShader::BuildEnemy(XMFLOAT3 spotPos)
 		}
 		break;
 	case 3:
-		// 지상 몬스터 5마리
-		// 		m_myTeamShip의 타겟을 설정해준다.
-		// 한번 공격하면 타겟을 바꿔준다.
+		for (int i = 0; i < 2; ++i)
+		{
+			CUFOEnemy* pEnemy = new CUFOEnemy(m_pPlayer,50.f + 20.f * i);
+			pEnemy->SetMesh(0, m_pEnemyUFOMesh);
+			pEnemy->SetScale(XMFLOAT3(5.f, 5.f, 5.f));
+			pEnemy->SetPosition(spotPos.x , spotPos.y + 10.f*i, spotPos.z);
+			pEnemy->SetObjectsShader(this);
+			pEnemy->SetOriginPos(pEnemy->GetPosition());
+			pEnemy->SetSpeed(1.f + 0.2f*i);
+			pEnemy->SetPlayerShip(m_myTeamShip[i]);
 
-		break;
-	case 4:
-		// UFO 보스몹
+			m_listObjects[OBJ::ENEMY].push_back(pEnemy);
+			m_myTeamShip[i]->SetTarget(pEnemy);
+		}
 		break;
 	default:
 		break;
@@ -719,6 +725,27 @@ void CObjectsShader::AddPlayerBullet()
 	pBullet->SetDir(playerLook);
 	m_listObjects[OBJ::MY_BULLET].push_back(pBullet);
 	//cout << playerLook.x <<" "<< playerLook.y << " " <<playerLook.z << endl;
+}
+
+void CObjectsShader::CheckEnding(float fTimeElapsed)
+{
+	// 몬스터가 없고 기지 다 내려가 있으면
+	if (n_iEnemyBuildNum == 4 && 
+		m_listObjects[OBJ::ENEMY].size() == 0 && 
+		m_listObjects[OBJ::FLYSHIP].size() == 0 &&
+		m_listObjects[OBJ::BASE].back()->GetPosition().y + 120.f > m_xmf3EnemyBasePos.y)
+	{
+
+		// 몬스터 기지 가라앉음
+		m_listObjects[OBJ::BASE].back()->MoveUp(-10.f * fTimeElapsed);
+	}
+}
+
+void CObjectsShader::Cheat()
+{
+	m_pPlayer->SetPosition(XMFLOAT3(1900.f, 100.f, 1600.f));
+	n_iEnemyBuildNum = 4;
+
 }
 
 CTerrainShader::CTerrainShader()

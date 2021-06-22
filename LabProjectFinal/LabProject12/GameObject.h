@@ -209,6 +209,7 @@ protected:
 	float		m_fScale;
 	float		m_fBulletCreateTime;
 };
+
 // 따라오는 적 오브젝트
 class CFollowingEnemy : public CEnemy
 {
@@ -224,6 +225,8 @@ private:
 	CPlayer*			m_pPlayer;
 
 };
+
+
 // 아군 오브젝트
 class CMyTeamObject : public CTerrainObject
 {
@@ -248,9 +251,9 @@ public:
 	CMyTeamShip(void* pContext, void* pPlayer, XMFLOAT3 xmf3Offset, float fMeshHeightHalf, int nMeshes = 1);
 	virtual ~CMyTeamShip();
 	virtual bool Animate(float fTimeElapsed);
-
+	void SetTarget(CGameObject* pTarget) { m_pTarget = pTarget; }
 private:
-	CGameObject*					pTarget;
+	CGameObject*					m_pTarget;
 	float							m_fBulletCreateTime;
 };
 
@@ -268,4 +271,27 @@ private:
 	float			m_fSpeed;
 	float			m_fCreateTime = 0.f;
 
+};
+
+// 공중 적 오브젝트
+class CUFOEnemy : public CGameObject
+{
+public:
+	CUFOEnemy(CPlayer* pPlayer, float fRadius, int nMeshes = 1);
+	virtual ~CUFOEnemy();
+
+public:
+	virtual bool	Animate(float fTimeElapsed);
+	void SetPlayer(CPlayer* pPlayer) { m_pPlayer = pPlayer; }
+	void SetSpeed(float fSpeed) { m_fSpeed = fSpeed; }
+	void SetOriginPos(XMFLOAT3 xmf3pos) { m_xmf3OriginPos = xmf3pos; }
+	void SetPlayerShip(CMyTeamShip* pPlayerShip) { m_pPlayerShip = pPlayerShip; }
+private:
+	CPlayer* m_pPlayer;
+	float				m_fSpeed;
+	float				m_fBulletCreateTime;
+	float				m_fAngle;
+	float				m_fRadius;
+	XMFLOAT3			m_xmf3OriginPos;
+	CMyTeamShip* m_pPlayerShip;
 };

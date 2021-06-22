@@ -32,6 +32,7 @@ public:
 	void SetPlayer(CPlayer* pPlayer) { m_pPlayer = pPlayer; }
 	void SetShaderPlayer(int index) { m_pShaders[index].SetPlayer(m_pPlayer); }
 	
+	void Cheat();
 protected:
 
 	ID3D12RootSignature* m_pd3dGraphicsRootSignature = NULL;

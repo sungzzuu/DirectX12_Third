@@ -555,7 +555,7 @@ bool CBullet::Animate(float fTimeElapsed)
 CMyTeamShip::CMyTeamShip(void* pContext, void* pPlayer, XMFLOAT3 xmf3Offset, float fMeshHeightHalf, int nMeshes)
 	:CMyTeamObject(pContext, pPlayer, xmf3Offset, fMeshHeightHalf, nMeshes)
 {
-	pTarget = nullptr;
+	m_pTarget = nullptr;
 	m_fBulletCreateTime = 0.f;
 }
 
@@ -571,7 +571,7 @@ bool CMyTeamShip::Animate(float fTimeElapsed)
 	SetPosition(newPos.x, m_pTerrain->GetHeight(newPos.x, newPos.z) + m_fMeshHeightHalf, newPos.z);
 	OnObjectUpdateCallback(fTimeElapsed);
 
-	if (pTarget)
+	if (m_pTarget)
 	{
 		m_fBulletCreateTime += fTimeElapsed;
 		if (m_fBulletCreateTime > 3.f)
@@ -581,10 +581,10 @@ bool CMyTeamShip::Animate(float fTimeElapsed)
 			// 노멀이면 총알 생성!!!
 			CBullet* pBullet = new CBullet(1);
 			pBullet->SetPosition(GetPosition());
-			XMFLOAT3 targetPos = pTarget->GetPosition();
+			XMFLOAT3 targetPos = m_pTarget->GetPosition();
 			XMFLOAT3 vDir = Vector3::Normalize(Vector3::Subtract(targetPos, GetPosition()));
 			pBullet->SetDir(vDir);
-			pBullet->SetSpeed(120.f);
+			pBullet->SetSpeed(800.f);
 			m_pObjectsShader->AddObject(OBJ::MY_BULLET, pBullet);
 
 			m_fBulletCreateTime = float(rand() % 5) * 0.5f;
@@ -632,6 +632,66 @@ bool CFollowingEnemy::Animate(float fTimeElapsed)
 
 	if (m_iHp < 0)
 		return OBJ_DEAD;
+
+	return OBJ_NONE;
+}
+
+CUFOEnemy::CUFOEnemy(CPlayer* pPlayer, float fRadius, int nMeshes)
+	:CGameObject(nMeshes)
+{
+	m_pPlayer = pPlayer;
+	m_fSpeed = 1.f;
+	m_fRadius = fRadius;
+}
+
+CUFOEnemy::~CUFOEnemy()
+{
+}
+
+bool CUFOEnemy::Animate(float fTimeElapsed)
+{
+	// 원을 그리며 이동하도록
+	m_fAngle += (fTimeElapsed * m_fSpeed);
+	SetPosition(m_xmf3OriginPos.x + cos(m_fAngle) * m_fRadius, 
+		GetPosition().y ,
+		m_xmf3OriginPos.z + sin(m_fAngle) * m_fRadius);
+
+	// 일정시간마다 총을 쏘도록
+	m_fBulletCreateTime += fTimeElapsed;
+	if (m_fBulletCreateTime > 3.f)
+	{
+		// 총알 발사
+		// 타겟 방향으로
+		// 노멀이면 총알 생성!!!
+		CBullet* pBullet = new CBullet(1);
+		pBullet->SetPosition(GetPosition());
+		XMFLOAT3 playerPos = m_pPlayer->GetPosition();
+		XMFLOAT3 vDir = Vector3::Normalize(Vector3::Subtract(playerPos, GetPosition()));
+		pBullet->SetDir(vDir);
+		pBullet->SetSpeed(120.f);
+		m_pObjectsShader->AddObject(OBJ::MONSTER_BULLET, pBullet);
+
+		m_fBulletCreateTime = float(rand() % 5) * 0.5f;
+	}
+
+	if (m_bHit)
+		m_fHitTime += fTimeElapsed;
+	// 충돌 변수 업데이트
+	if (m_fHitTime > 0.2f)
+	{
+		m_fHitTime = 0.f;
+		m_bHit = false;
+		m_xmf4HitColor = m_xmf4HitColor = { 0.f,0.f,0.f,0.f };
+	}
+
+	UpdateBoundingBox();
+
+	if (m_iHp < 0)
+	{
+		m_pPlayerShip->SetTarget(nullptr);
+		return OBJ_DEAD;
+
+	}
 
 	return OBJ_NONE;
 }

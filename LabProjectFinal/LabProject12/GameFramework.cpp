@@ -515,6 +515,7 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 		case VK_RETURN:
 			break;
 		case VK_F8:
+			m_pScene->Cheat();
 			break;
 		case VK_F9:
 			ChangeSwapChainState();
@@ -560,7 +561,7 @@ LRESULT CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT nMessageID, WP
 	case WM_LBUTTONUP:
 		//¸¶¿ì½º Ä¸ÃÄ¸¦ ÇØÁ¦ÇÑ´Ù.
 		::ReleaseCapture();
-		cout << "ÈÙ!" << endl;
+		//cout << "ÈÙ!" << endl;
 
 		break;
 	case WM_RBUTTONUP:

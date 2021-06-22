@@ -470,6 +470,8 @@ CCamera* CTerrainPlayer::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 		SetMaxVelocityY(400.0f);
 		m_pCamera = OnChangeCamera(THIRD_PERSON_CAMERA, nCurrentCameraMode);
 		m_pCamera->SetTimeLag(0.25f);
+		//m_pCamera->SetOffset(XMFLOAT3(0.f,1800.0f,-10.f));
+
 		m_pCamera->SetOffset(XMFLOAT3(0.0f,80.0f, -150.0f));
 		m_pCamera->GenerateProjectionMatrix(1.01f, 50000.0f, ASPECT_RATIO, 60.0f);
 	break; default:
