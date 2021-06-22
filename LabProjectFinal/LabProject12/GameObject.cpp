@@ -13,6 +13,9 @@ CGameObject::CGameObject(int nMeshes)
 		m_ppMeshes = new CMesh * [m_nMeshes];
 		for (int i = 0; i < m_nMeshes; i++) m_ppMeshes[i] = NULL;
 	}
+
+	m_iHp = 100;
+
 }
 CGameObject::~CGameObject()
 {
@@ -29,6 +32,8 @@ CGameObject::~CGameObject()
 		m_pShader->ReleaseShaderVariables();
 		m_pShader->Release();
 	}
+
+
 }
 
 void CGameObject::SetShader(CShader* pShader)
@@ -188,6 +193,7 @@ void CGameObject::SetLook(XMFLOAT3 vLook)
 
 void CGameObject::SetHit(bool bHit, XMFLOAT4 xmColor)
 {
+	m_iHp -= 20;
 	m_bHit = bHit; 
 	m_xmf4HitColor = xmColor;
 	m_fHitTime = 0.f;
@@ -464,6 +470,10 @@ bool CEnemy::Animate(float fTimeElapsed)
 	}
 
 	UpdateBoundingBox();
+
+	if (m_iHp < 0)
+		return OBJ_DEAD;
+
 	return OBJ_NONE;
 
 }

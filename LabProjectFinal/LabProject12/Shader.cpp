@@ -238,6 +238,7 @@ void CObjectsShader::InitBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 	m_pCubeEnemyMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 8.f, 8.f, 8.f, OBJ::RED);
 	m_pCubeEnemyBulletMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 4.f, 4.f, 4.f, OBJ::YELLOW);
 	m_pCubePlayerBulletMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 4.f, 4.f, 4.f, OBJ::GREEN);
+	m_pCubeWaterMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList,1500.f, 50.f, 1500.f, OBJ::BLUE);
 
 	/* 아군 생성 지점 만드는 부분 */
 	// 아군 지점 20,fheight, 100에 설치
@@ -319,8 +320,14 @@ void CObjectsShader::InitBuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 	m_xmf3EnemyBasePos = pEnemyBase->GetPosition();
 
 	m_listObjects[OBJ::BASE].push_back(pEnemyBase);
+	//=========================================================================================================
 
-	
+	/* 물 생성 */
+	CGameObject* pWater = new CGameObject(1);
+	pWater->SetMesh(0, m_pCubeWaterMesh);
+	pWater->SetPosition(1200.f,100.f, 1200.f);
+	m_listObjects[OBJ::NONE].push_back(pWater);
+
 	//pEnemyFlyShip->SetPosition();
 	// 비행기 테스트 출력
 	//XMFLOAT3 xmf3RotateAxis, xmf3SurfaceNormal;

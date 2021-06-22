@@ -114,6 +114,8 @@ protected:
 	CCubeMeshDiffused*						m_pCubeEnemyMesh;			// 적군 메쉬
 	CCubeMeshDiffused*						m_pCubeEnemyBulletMesh;		// 적군 총알 메쉬
 	CCubeMeshDiffused*						m_pCubePlayerBulletMesh;	// 플레이어 총알 메쉬
+	CCubeMeshDiffused*						m_pCubeWaterMesh;			// 플레이어 총알 메쉬
+
 };
 
 class CTerrainShader : public CShader

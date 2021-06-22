@@ -32,6 +32,7 @@ public:
 	XMFLOAT4					m_xmf4HitColor;
 	float						m_fHitTime = 0.f;
 	bool						m_bHit = false;
+	int							m_iHp;
 public:
 	void ReleaseUploadBuffers(); 
 	virtual void SetMesh(int nIndex, CMesh* pMesh);
